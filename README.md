@@ -1,11 +1,10 @@
 # rtip-ais
 
-This code base is using the [Julia Language](https://julialang.org/) and
-[DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
-to make a reproducible scientific project named
-> rtip-ais
+This is a project investigating rate-induced tipping of the Antarctic Ice Sheet,
+authored by Jan Swierczek-Jereczek.
 
-It is authored by Jan Swierczek-Jereczek.
+
+## Reproduce this project
 
 To (locally) reproduce this project, do the following:
 
