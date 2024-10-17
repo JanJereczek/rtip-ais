@@ -1,7 +1,7 @@
 include("intro.jl")
 
 filepaths = String[]
-for (root, dirs, files) in walkdir(datadir("output"))
+for (root, dirs, files) in walkdir(datadir("output/ais/spinup"))
     for file in files
         if occursin("yelmo2D.nc", file)
             push!(filepaths, joinpath(root, file))
@@ -32,15 +32,23 @@ for i in eachindex(filepaths)
         ds = NCDataset(filepath)
         heatmap!(axs[1], ds["H_ice_pd_err"][:, :, end]; H_opts...)
         heatmap!(axs[2], ds["uxy_s_pd_err"][:, :, end]; u_opts...)
+        
+        for ax in axs
+            contour!(ax, ds["f_grnd"][:, :, 1]; levels = [0.5],
+                linewidth = 2, color = :gray)
+            contour!(ax, ds["f_grnd"][:, :, end]; levels = [0.5],
+                linewidth = 2, color = :black)
+        end
+
         push!(t_e, ds["time"][:][end])
         push!(e_H, mean(abs.(ds["H_ice_pd_err"][:, :, end])))
         push!(e_u, mean(abs.(ds["uxy_s_pd_err"][:, :, end])))
         close(ds)
-        save(plotsdir("pd_err_$i.png"), fig)
+        save(plotsdir("spinup/pd_err_$i.png"), fig)
     end
 end
 
-writedlm(plotsdir("t_e.csv"), t_e, ',')
-writedlm(plotsdir("filepaths.csv"), filepaths, ',')
-writedlm(plotsdir("e_H.csv"), e_H, ',')
-writedlm(plotsdir("e_u.csv"), e_u, ',')
+writedlm(plotsdir("spinup/t_e.csv"), t_e, ',')
+writedlm(plotsdir("spinup/filepaths.csv"), filepaths, ',')
+writedlm(plotsdir("spinup/e_H.csv"), e_H, ',')
+writedlm(plotsdir("spinup/e_u.csv"), e_u, ',')
