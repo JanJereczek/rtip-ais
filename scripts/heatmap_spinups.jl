@@ -13,10 +13,13 @@ fig = Figure(size = (1600, 900), fontsize = 30)
 axs = [Axis(fig[1, j], aspect = DataAspect()) for j in 1:2]
 [hidedecorations!(ax) for ax in axs]
 
-H_opts = (colormap = :balance, colorrange = (-1500, 1500))
+relwidth = 0.6
+H_opts = (colormap = cgrad([:royalblue3, :white, :red3]), colorrange = (-1500, 1500))
 u_opts = (colormap = cgrad([:orange, :white, :purple]), colorrange = (-1000, 1000))
-Colorbar(fig[2, 1], vertical = false, width = Relative(0.5); H_opts...)
-Colorbar(fig[2, 2], vertical = false, width = Relative(0.5); u_opts...)
+Colorbar(fig[0, 1], vertical = false, width = Relative(relwidth),
+    label = "H_ice_pd_err (m)"; H_opts...)
+Colorbar(fig[0, 2], vertical = false, width = Relative(relwidth),
+    label = "uxy_s_pd_err (m/s)"; u_opts...)
 
 t_e = []
 e_u = []
