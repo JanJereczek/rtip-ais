@@ -1,3 +1,5 @@
+latexify(s) = L"%$s $\,$"
+
 function get_files(dir)
     file1D = joinpath(dir, "yelmo1D.nc")
     file1Dwais = joinpath(dir, "yelmo1D_WAIS.nc")
