@@ -7,6 +7,7 @@ axs = [Axis(fig[i+1, j]) for i in 1:nrows, j in 1:ncols]
 dir = datadir("output/ais/hyster/aqef/")
 xps = ["20K/3", "20K/2", "regrowth/20K-3_equil-24/0"]
 #, "20K-dt5/0/", "20K-dt5-reducedout/0/"] #, "20K/0/", "20K/1/", "20K/2/", "20K/3/"]
+# data/output/ais/hyster/ramp/regrowth/20K-3_equil-24
 
 stride = 2_000
 var_names_1D = ["time", "V_sl"] #, "V_ice", "A_ice"]
