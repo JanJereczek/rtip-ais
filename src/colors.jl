@@ -1,18 +1,18 @@
-z_srf_map = cgrad([:gray10, :gray95])
+z_srf_map = cgrad([:gray10, :gray95], 0:0.1:1, categorical = true)
 z_bed_map = cgrad(:oleron, [2/3])
-uxy_s_map = cgrad(:Purples, 0:0.25:1, categorical = true)
+uxy_s_map = cgrad(:inferno, 0:0.1:1, categorical = true)
 u_bed_map = cgrad([:orange, :white, :midnightblue], [1/9])
 z_sl_map = cgrad(:BrBg)
 smb_map = cgrad(:PuOr, [6/8])
 T_shlf_map = cgrad(:jet)
 
 cmaps = Dict(
-    "z_srf" => (colormap = z_srf_map, colorrange = (1e1, 4e3),
+    "z_srf" => (colormap = z_srf_map, colorrange = (1e-1, 4e3),
         lowclip = :transparent, highclip = :white),
     "z_bed" => (colormap = z_bed_map, colorrange = (-4e3, 2e3),
-        lowclip = oleronmap[1], highclip = oleronmap[end]),
-    "uxy_s" => (colormap = uxy_s_map, colorrange = (0, 4),
-        lowclip = :transparent, highclip = uxy_s_map[end]),
+        lowclip = z_bed_map[1], highclip = z_bed_map[end]),
+    "uxy_s" => (colormap = uxy_s_map, colorrange = (-1, 4),
+        lowclip = uxy_s_map[1], highclip = uxy_s_map[end]),
     "u_bed" => (colormap = u_bed_map, colorrange = (-100, 800),
         lowclip = u_bed_map[1], highclip = u_bed_map[end]),
     "z_sl" => (colormap = z_sl_map, colorrange = (-10, 10),
