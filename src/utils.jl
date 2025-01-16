@@ -1,4 +1,6 @@
 latexify(s) = L"%$s $\,$"
+latexifyticks(x) = (x, latexify.(x))
+latexifyticks(x, scale) = (x .* scale, latexify.(x))
 
 function get_files(dir)
     file1D = joinpath(dir, "yelmo1D.nc")
@@ -13,7 +15,6 @@ function get_files(dir)
     return file1D, file1Dwais, file1Dapis, file1Deais, file2D, file2Dwais, file2Dsm, file3D
 end
 
-
 function load_netcdf(file, vars::Vector{String})
     return [ncread(file, var) for var in vars]
 end
@@ -25,11 +26,6 @@ end
 function load_netcdf_2D(file, vars::Vector{String}, index)
     return [ncread(file, var)[:, :, index] for var in vars]
 end
-
-
-
-
-
 
 
 
