@@ -79,25 +79,6 @@ icemap = (colormap = cgrad([:gray10, :gray95], 0:0.05:1, categorical =true),
 velmap = (colormap = :inferno, colorrange = (1e2, 1e4), lowclip = :transparent)
 t2D = ncread(file2D, "time")
 
-# for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
-#     if i > 1 || j > 1
-#         i3 = findfirst(f .>= forcing_frames[i, j])
-#         scatter!(axs[k, 1], f[i3], V_sle[i3], color = :red, markersize = ms)
-#         if i > 2
-#             text!(axs[k, 1], f[i3], V_sle[i3], text = state_labels[i, j],
-#                 color = :grey10, fontsize = 30, font = :bold, offset = (0, 10))
-#         elseif (i >= 2 && j >= 2)
-#             text!(axs[k, 1], f[i3], V_sle[i3], text = state_labels[i, j],
-#                 color = :grey10, fontsize = 30, font = :bold, offset = (0, 10))
-#         else
-#             text!(axs[k, 1], f[i3], V_sle[i3], text = state_labels[i, j],
-#                 color = :grey10, fontsize = 30, font = :bold, offset = (-20, -40))
-#         end
-#     end
-# end
-
-fig
-
 for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     if i > 1 || j > 1
         forcing = forcing_frames[i, j]
@@ -133,7 +114,27 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     end
     # heatmap!(axs[1, 2], uxy_srf; velmap...)
 end
-axislegend(axs[1, 1], position = :lb, fontsize = 16)
+
+hist = readdlm(datadir("processed/SSP/History.csv"), ',')
+f2014 = hist[end, 2]
+ssp1 = readdlm(datadir("processed/SSP/SSP1.csv"), ',') .- f2014
+ssp2 = readdlm(datadir("processed/SSP/SSP2.csv"), ',') .- f2014
+ssp3 = readdlm(datadir("processed/SSP/SSP3.csv"), ',') .- f2014
+# ssp4 = readdlm(datadir("processed/SSP/SSP4.csv"), ',')
+ssp5 = readdlm(datadir("processed/SSP/SSP5.csv"), ',') .- f2014
+
+polar_amplification = 1.8
+ssp1_2100 = ssp1[end, 2] * polar_amplification * f_to
+ssp2_2100 = ssp2[end, 2] * polar_amplification * f_to
+ssp3_2100 = ssp3[end, 2] * polar_amplification * f_to
+ssp5_2100 = ssp5[end, 2] * polar_amplification * f_to
+
+vlines!(axs[1, 1], [ssp1_2100], color = :darkblue, linewidth = 3, linestyle = :dash, label = "SSP1-2100")
+vlines!(axs[1, 1], [ssp2_2100], color = :lightblue, linewidth = 3, linestyle = :dash, label = "SSP2-2100")
+vlines!(axs[1, 1], [ssp3_2100], color = :orange, linewidth = 3, linestyle = :dash, label = "SSP3-2100")
+vlines!(axs[1, 1], [ssp5_2100], color = :darkred, linewidth = 3, linestyle = :dash, label = "SSP4-2100")
+
+axislegend(axs[1, 1], position = :lb, fontsize = 12)
 relwidth = 0.7
 Colorbar(fig[1, 2:3], vertical = false, width = Relative(relwidth), halign = :left,
     label = L"Bed elevation (km) $\,$", ticks = latexifyticks(-6:2, 1f3); bedmap...)
