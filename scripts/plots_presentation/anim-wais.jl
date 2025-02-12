@@ -1,4 +1,4 @@
-include("intro.jl")
+include("../intro.jl")
 
 file = datadir("output/ais/hyster/aqef/20K/3/yelmo2Dwais.nc")
 

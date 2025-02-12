@@ -1,4 +1,4 @@
-include("intro.jl")
+include("../intro.jl")
 
 # Load the data
 prefix = datadir("output/test")

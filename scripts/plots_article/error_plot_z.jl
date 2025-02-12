@@ -1,4 +1,4 @@
-include("intro.jl")
+include("../intro.jl")
 
 fn = datadir("output/ais/spinup/lloyd2024-largepad/0/yelmo2D.nc")
 fn_ref = datadir("output/ais/spinup/lloyd2024-largepad/0/ice_data/Antarctica/ANT-32KM/ANT-32KM_TOPO-RTOPO-2.0.1.nc")

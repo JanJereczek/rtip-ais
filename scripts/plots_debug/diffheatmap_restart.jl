@@ -1,4 +1,4 @@
-include("intro.jl")
+include("../intro.jl")
 
 exp1 = datadir("output/ais/spinup/base/0/yelmo2D.nc")
 exp2 = datadir("output/ais/hyster/aqef/fast/0/yelmo2D.nc")

@@ -11,8 +11,10 @@ function get_files(dir)
     file2Dwais = joinpath(dir, "yelmo2Dwais.nc")
     file2Dsm = joinpath(dir, "yelmo2Dsm.nc")
     file3D = joinpath(dir, "yelmo3D.nc")
+    file_bsl = joinpath(dir, "bsl.nc")
 
-    return file1D, file1Dwais, file1Dapis, file1Deais, file2D, file2Dwais, file2Dsm, file3D
+    return file1D, file1Dwais, file1Dapis, file1Deais, file2D, file2Dwais, file2Dsm,
+        file3D, file_bsl
 end
 
 function load_netcdf(file, vars::Vector{String})
@@ -27,7 +29,15 @@ function load_netcdf_2D(file, vars::Vector{String}, index)
     return [ncread(file, var)[:, :, index] for var in vars]
 end
 
-
+function recursive_global(dir, pattern, level)
+    filepaths = String[]
+    gl = "$pattern"
+    for _ in 1:level
+        append!(filepaths, glob(gl, dir))
+        gl = "*/" * gl
+    end
+    return filepaths
+end
 
 
 
