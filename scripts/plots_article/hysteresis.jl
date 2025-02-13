@@ -31,6 +31,27 @@ k = 1
 time, V_sle = load_netcdf(file1D, var_names_1D)
 i2 = lastindex(t_1D)-1 # minimum(lastindex.(vars))
 lines!(axs[k, 1], f[1:i2], V_sle[1:i2], linewidth = 4, label = "AQEF")
+
+file1D_regrowth = datadir("output/ais/hyster/16km/regrowth/aqef/0/yelmo1D.nc")
+time_regrowth, V_sle_regrowth = load_netcdf(file1D_regrowth, var_names_1D)
+f_regrowth = ncread(file1D_regrowth, "hyst_f_now") .* f_to
+lines!(axs[k, 1], f_regrowth, V_sle_regrowth, linewidth = 4, color = Cycled(1))
+
+# dir_garbe = datadir("processed/garbe2020/")
+# files_garbe = readdir(dir_garbe)
+# garbe_f_to = 0.7 / 1.8
+# for j in eachindex(files_garbe)
+#     file_garbe = joinpath(dir_garbe, files_garbe[j])
+#     data, head = readdlm(file_garbe, ',', header = true)
+#     f_garbe = view(data, :, 1)
+#     V_garbe = view(data, :, 2)
+#     if occursin("equil", file_garbe)
+#         scatterlines!(axs[k, 1], f_garbe .* garbe_f_to, V_garbe, linewidth = 4, color = Cycled(3))
+#     else
+#         scatterlines!(axs[k, 1], f_garbe .* garbe_f_to, V_garbe, linewidth = 4, color = Cycled(4))
+#     end
+# end
+
 for i in 1:1
     axs[i, 1].xminorticks = IntervalsBetween(5)
     axs[i, 1].yminorticks = IntervalsBetween(10)
@@ -129,12 +150,13 @@ ssp2_2100 = ssp2[end, 2] * polar_amplification * f_to
 ssp3_2100 = ssp3[end, 2] * polar_amplification * f_to
 ssp5_2100 = ssp5[end, 2] * polar_amplification * f_to
 
-vlines!(axs[1, 1], [ssp1_2100], color = :darkblue, linewidth = 3, linestyle = :dash, label = "SSP1-2100")
-vlines!(axs[1, 1], [ssp2_2100], color = :lightblue, linewidth = 3, linestyle = :dash, label = "SSP2-2100")
-vlines!(axs[1, 1], [ssp3_2100], color = :orange, linewidth = 3, linestyle = :dash, label = "SSP3-2100")
-vlines!(axs[1, 1], [ssp5_2100], color = :darkred, linewidth = 3, linestyle = :dash, label = "SSP4-2100")
+line_opts = (linewidth = 3, linestyle = :dash)
+vlines!(axs[1, 1], [ssp1_2100], color = :darkblue, label = "SSP1-2100"; line_opts...)
+vlines!(axs[1, 1], [ssp2_2100], color = :lightblue, label = "SSP2-2100"; line_opts...)
+vlines!(axs[1, 1], [ssp3_2100], color = :orange, label = "SSP3-2100"; line_opts...)
+vlines!(axs[1, 1], [ssp5_2100], color = :darkred, label = "SSP5-2100"; line_opts...)
 
-axislegend(axs[1, 1], position = :lb, fontsize = 12)
+axislegend(axs[1, 1], position = :rt, labelsize = 20)
 relwidth = 0.7
 Colorbar(fig[1, 2:3], vertical = false, width = Relative(relwidth), halign = :left,
     label = L"Bed elevation (km) $\,$", ticks = latexifyticks(-6:2, 1f3); bedmap...)
