@@ -1,9 +1,9 @@
 include("../intro.jl")
 
 dx = 16
-ncdir = datadir("output/ais/spinup/$(dx)km/")
+ncdir = datadir("output/ais/spinup/$(dx)km/corrected-hydro")
 filepaths = recursive_global(ncdir, "yelmo2D.nc", 5)
-target_dir = plotsdir("errormap_ensemble/$(dx)km/")
+target_dir = plotsdir("$(dx)km/errormap_ensemble/")
 
 function plot_error_u(fn, hash, dx, target_dir)
 
@@ -24,6 +24,7 @@ function plot_error_u(fn, hash, dx, target_dir)
     y = axes(diff, 2)
     X = repeat(x, 1, length(y))
     Y = repeat(y', length(x), 1)
+    rmse = sqrt(mean(diff[mask_now] .^ 2))
 
     tol = 1f-8
     nrows, ncols = 2, 2
@@ -34,8 +35,10 @@ function plot_error_u(fn, hash, dx, target_dir)
     fig = Figure(size=(1100, 1200), fontsize = fs)
     axs = [Axis(fig[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
     [hidedecorations!(ax) for ax in [axs[1, 1], axs[1, 2], axs[2, 2]]]
-    diff_cmap = (colormap = cgrad([:darkred, :white, :darkblue], 11, categorical = true,
-        rev = true), lowclip = :darkblue, highclip = :darkred, colorrange = (-3, 3))
+    diff_cmap = (colormap = cgrad(
+        [:darkred, :lightsalmon, :white, :white, :white, :skyblue, :darkblue],
+        11, categorical = true, rev = true),
+        lowclip = :darkblue, highclip = :darkred, colorrange = (-3, 3))
 
     heatmap!(axs[1, 1], view(z_bed_ref, :, :, 1); cmaps["z_bed"]...)
     heatmap!(axs[1, 1], X[mask_ref], Y[mask_ref], log10.(view(uxy_s_ref, mask_ref, 1) .+ tol);
@@ -53,6 +56,7 @@ function plot_error_u(fn, hash, dx, target_dir)
     axs[2, 1].yticks = (0:3, latexify.([1, 10, 100, 1000]))
     xlims!(axs[2, 1], (-1, 3.5))
     ylims!(axs[2, 1], (-1, 3.5))
+    lines!(axs[2, 1], -1:0.5:3.5, -1:0.5:3.5, color = :red, linewidth = 3)
 
     Colorbar(fig[0, 1], vertical = false, width = Relative(rw), flipaxis = true,
         label = L"Ice surface velocity ($\mathrm{m \, yr^{-1}}$)",
@@ -65,14 +69,18 @@ function plot_error_u(fn, hash, dx, target_dir)
         ticks = (-3:3, latexify.([-1000, -100, -10, 0, 10, 100, 1000])); diff_cmap...)
 
 
-    text!(axs[1, 1], 10, 170, text = L"\textbf{(a)}", color = :white, fontsize = fs + fs_off)
-    text!(axs[1, 2], 10, 170, text = L"\textbf{(b)}", color = :white, fontsize = fs + fs_off)
+    px, py = 15, 340
+    text!(axs[1, 1], px, py, text = L"\textbf{(a)}", color = :white, fontsize = fs + fs_off)
+    text!(axs[1, 2], px, py, text = L"\textbf{(b)}", color = :white, fontsize = fs + fs_off)
     text!(axs[2, 1], -0.8, 3, text = L"\textbf{(c)}", color = :gray5, fontsize = fs + fs_off)
-    text!(axs[2, 2], 10, 170, text = L"\textbf{(d)}", color = :gray5, fontsize = fs + fs_off)
+    text!(axs[2, 1], 1.5, -0.8, color = :gray5, fontsize = fs + fs_off,
+        text = L"RMSE = %$(round(rmse; digits = 2)) $\mathrm{m \, yr^{-1}}$")
+    text!(axs[2, 2], px, py, text = L"\textbf{(d)}", color = :gray5, fontsize = fs + fs_off)
     rowgap!(fig.layout, 1, 10)
     rowgap!(fig.layout, 2, 5)
     rowgap!(fig.layout, 3, -40)
     colgap!(fig.layout, 5)
+
 
     save("$target_dir/u-$hash.png", fig)
 end

@@ -1,9 +1,9 @@
 include("../intro.jl")
 
 dx = 16
-ncdir = datadir("output/ais/spinup/$(dx)km/")
+ncdir = datadir("output/ais/spinup/$(dx)km/corrected-hydro")
 filepaths = recursive_global(ncdir, "yelmo2D.nc", 5)
-target_dir = plotsdir("errormap_ensemble/$(dx)km/")
+target_dir = plotsdir("$(dx)km/errormap_ensemble/")
 
 function plot_error_z(fn, hash, dx, target_dir)
 
@@ -11,12 +11,14 @@ function plot_error_z(fn, hash, dx, target_dir)
     fn_ref = "/p/projects/megarun/ice_data/Antarctica/ANT-$(dx)KM/ANT-$(dx)KM_TOPO-RTOPO-2.0.1.nc"
 
     nt = ncread(fn, "time") |> length
-    z_srf_now = ncread(fn, "z_srf", start = [1, 1, nt], count = [-1, -1, 1])
-    f_grnd = ncread(fn, "f_grnd", start = [1, 1, nt], count = [-1, -1, 1])
+    z_srf_now = ncread(fn, "z_srf", start = [1, 1, nt], count = [-1, -1, 1])[:, :, 1]
+    f_grnd = ncread(fn, "f_grnd", start = [1, 1, nt], count = [-1, -1, 1])[:, :, 1]
     z_srf_ref = ncread(fn_ref, "z_srf")
     mask_ref = ncread(fn_ref, "mask")
-    z_bed_ref = ncread(fn, "z_bed", start = [1, 1, 1], count = [-1, -1, 1])
-    z_bed_now = ncread(fn, "z_bed", start = [1, 1, nt], count = [-1, -1, 1])
+    z_bed_ref = ncread(fn, "z_bed", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
+    z_bed_now = ncread(fn, "z_bed", start = [1, 1, nt], count = [-1, -1, 1])[:, :, 1]
+    diff = z_srf_now .- z_srf_ref
+    rmse = sqrt(mean(diff[mask_ref .> 0] .^ 2))
 
     nrows, ncols = 2, 2
     rw = 0.7
@@ -29,13 +31,13 @@ function plot_error_z(fn, hash, dx, target_dir)
     diff_cmap = (colormap = cgrad([:darkred, :white, :darkblue], 11, categorical = true),
         colorrange = (-5, 5))
 
-    heatmap!(axs[1, 1], view(z_bed_ref, :, :, 1); cmaps["z_bed"]...)
-    heatmap!(axs[1, 1], view(z_srf_ref, :, :, 1); cmaps["z_srf"]...)
+    heatmap!(axs[1, 1], z_bed_ref; cmaps["z_bed"]...)
+    heatmap!(axs[1, 1], z_srf_ref; cmaps["z_srf"]...)
     contour!(axs[1, 1], mask_ref .== 2, levels = [0.5], color = :red, linewidth = 3)
 
-    heatmap!(axs[1, 2], view(z_bed_now, :, :, 1); cmaps["z_bed"]...)
-    heatmap!(axs[1, 2], view(z_srf_now, :, :, 1); cmaps["z_srf"]...)
-    contour!(axs[1, 2], view(f_grnd, :, :, 1), levels = [0.5], color = :orange, linewidth = 3)
+    heatmap!(axs[1, 2], z_bed_now; cmaps["z_bed"]...)
+    heatmap!(axs[1, 2], z_srf_now; cmaps["z_srf"]...)
+    contour!(axs[1, 2], f_grnd, levels = [0.5], color = :orange, linewidth = 3)
 
     scatter!(axs[2, 1], vec(z_srf_ref), vec(z_srf_now), markersize = ms,
         color = :gray5)
@@ -44,9 +46,9 @@ function plot_error_z(fn, hash, dx, target_dir)
     axs[2, 1].xticks = latexifyticks(0:4, 1f3)
     axs[2, 1].yticks = latexifyticks(0:4, 1f3)
 
-    heatmap!(axs[2, 2], view(z_srf_now .- z_srf_ref, :, :, 1) * 1f-2; diff_cmap...)
+    heatmap!(axs[2, 2], diff * 1f-2; diff_cmap...)
     contour!(axs[2, 2], mask_ref .== 2, levels = [0.5], color = :red, linewidth = 3)
-    contour!(axs[2, 2], view(f_grnd, :, :, 1), levels = [0.5], color = :orange, linewidth = 3)
+    contour!(axs[2, 2], f_grnd, levels = [0.5], color = :orange, linewidth = 3)
 
     Colorbar(fig[0, 1], vertical = false, width = Relative(rw), flipaxis = true,
         label = L"Ice surface elevation (km) $\,$", ticks = latexifyticks(0:4, 1f3),
@@ -66,7 +68,12 @@ function plot_error_z(fn, hash, dx, target_dir)
     text!(axs[1, 1], 10, 170, text = L"\textbf{(a)}", fontsize = fs + fs_off, color = :white)
     text!(axs[1, 2], 10, 170, text = L"\textbf{(b)}", fontsize = fs + fs_off, color = :white)
     text!(axs[2, 1], 0, 3770, text = L"\textbf{(c)}", fontsize = fs + fs_off, color = :gray5)
+    text!(axs[2, 1], 2000, 100.0, color = :gray5, fontsize = fs + fs_off,
+        text = L"RMSE = %$(round(rmse; digits = 2)) $\mathrm{m}$")
     text!(axs[2, 2], 10, 170, text = L"\textbf{(d)}", fontsize = fs + fs_off, color = :gray5)
+    xlims!(axs[2, 1], -0.1, 4200)
+    ylims!(axs[2, 1], -0.1, 4200)
+    lines!(axs[2, 1], -1000:1000:5000, -1000:1000:5000, color = :red, linewidth = 3)
 
     rowgap!(fig.layout, 1, 10)
     rowgap!(fig.layout, 2, 10)

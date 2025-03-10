@@ -1,18 +1,12 @@
 include("../intro.jl")
 
-dir = datadir("output/ais/hyster/16km/aqef/pmpt-hydro-25K/1")
+dir = datadir("output/ais/hyster/16km/regrowth/aqef/0")
 file1D = "$dir/yelmo1D.nc"
 file2D = "$dir/yelmo2Dsm.nc"
 file_bsl = "$dir/bsl.nc"
 
 nx, ny = size(ncread(file2D, "x2D"))
 X2D, Y2D = ncread(file2D, "x2D"), ncread(file2D, "y2D")
-# x = 1:nx
-# y = 1:ny
-# X = repeat(x, 1, ny)
-# Y = repeat(y', nx, 1)
-# R = sqrt.((X .- nx/2).^2 + (Y .- ny/2).^2)
-
 tol = 1e-8
 f_to = 0.25
 
@@ -60,7 +54,7 @@ fs = 22
 lw = 3
 rw = 0.8
 tol = 1e-8
-tticks_vals_1D = collect(range(0, stop = n_1D, step = 20e3/dt_1D))
+tticks_vals_1D = collect(range(0, stop = n_1D, step = 50e3/dt_1D))
 tticks_1D = (tticks_vals_1D, latexify.(Int.(tticks_vals_1D .* dt_1D ./ 1e3)))
 tticks_vals_2D = collect(range(0, stop = n_2D, step = 20e3/dt_2D))
 tticks_2D = (tticks_vals_2D, latexify.(Int.(tticks_vals_2D .* dt_2D ./ 1e3)))
@@ -110,6 +104,6 @@ rowgap!(fig.layout, 1, 10)
 rowgap!(fig.layout, 2, -45)
 fig
 
-record(fig, plotsdir("16km/anim-ais.mp4"), 1:n_2D, framerate = 24) do i
+record(fig, plotsdir("16km/anim-regrowth-aqef.mp4"), 1:n_2D, framerate = 24) do i
     k[] = i
 end

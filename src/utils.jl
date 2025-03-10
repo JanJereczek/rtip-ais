@@ -39,11 +39,35 @@ function recursive_global(dir, pattern, level)
     return filepaths
 end
 
-
-
 # After timing this function, it turns out perf and alloc is similar to load_netcdf
 function load_ncdataset_1D(file, vars)
     NCDataset(file) do ds
         return [ds[var][:] for var in vars]
     end
+end
+
+
+function load_ssps(scale; wrt = :pd)
+    hist = readdlm(datadir("processed/SSP/History.csv"), ',')
+    ssp1 = readdlm(datadir("processed/SSP/SSP1.csv"), ',')
+    ssp2 = readdlm(datadir("processed/SSP/SSP2.csv"), ',')
+    ssp3 = readdlm(datadir("processed/SSP/SSP3.csv"), ',')
+    ssp5 = readdlm(datadir("processed/SSP/SSP5.csv"), ',')
+    if wrt == :pd
+        f2014 = hist[end, 2]
+        view(ssp1, :, 2) .-= f2014
+        view(ssp2, :, 2) .-= f2014
+        view(ssp3, :, 2) .-= f2014
+        view(ssp5, :, 2) .-= f2014
+    elseif wrt == :pi
+        nothing
+    else
+        error("wrt must be either :pd or :pi")
+    end
+
+    view(ssp1, :, 2) .*= scale
+    view(ssp2, :, 2) .*= scale
+    view(ssp3, :, 2) .*= scale
+    view(ssp5, :, 2) .*= scale
+    return ssp1, ssp2, ssp3, ssp5
 end

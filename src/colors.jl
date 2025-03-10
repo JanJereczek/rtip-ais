@@ -2,11 +2,12 @@ z_srf_map = cgrad([:gray10, :gray95], 0:0.1:1, categorical = true)
 z_bed_map = cgrad(:oleron, [2/3])
 z_bed_map2 = cgrad(:oleron, [3/4])
 z_bed_map3 = cgrad(:oleron, [1/3])
+z_bed_map5 = cgrad(:oleron)
+
 p = 6
 nl_bathym = (range(0.0, stop = (2/3)^p, length = 12)) .^ (1/p)
 lin_oro = range(2/3 + nl_bathym[end] - nl_bathym[end-1], stop = 1, length = 5)
 z_bed_map4 = cgrad(:oleron, vcat(nl_bathym, lin_oro))
-z_bed_map = cgrad(:oleron, [2/3])
 
 # z_bed_map4 = cgrad(:oleron, [2/3])
 
@@ -30,8 +31,14 @@ cmaps = Dict(
         lowclip = z_bed_map3[1], highclip = z_bed_map3[end]),
     "z_bed4" => (colormap = z_bed_map4, colorrange = (-4e3, 2e3),
         lowclip = z_bed_map4[1], highclip = z_bed_map4[end]),
-    "uxy_s" => (colormap = uxy_s_map, colorrange = (-1, 5),
-        lowclip = uxy_s_map[1], highclip = uxy_s_map[end]),
+    "z_bed5" => (colormap = z_bed_map5, colorrange = (-2.5e3, 2.5e3),
+        lowclip = z_bed_map5[1], highclip = z_bed_map[end]),
+    "z_bed6" => (colormap = cgrad(z_bed_map5,
+        range(0, stop = 1, length = 20), categorical = true),
+        colorrange = (-1.6e3, 1.6e3),
+        lowclip = z_bed_map5[1], highclip = z_bed_map5[end]),
+    "uxy_s" => (colormap = cgrad(:inferno, range(0, stop = 1, length = 11), categorical = true),
+        colorrange = (-1, 4), lowclip = uxy_s_map[1], highclip = uxy_s_map[end]),
     "uxy_s2" => (colormap = uxy_s_map2, colorrange = (-1, 4),
         lowclip = uxy_s_map2[1], highclip = :transparent),
     "uxy_s3" => (colormap = uxy_s_map3, colorrange = (0.5, 4.5),

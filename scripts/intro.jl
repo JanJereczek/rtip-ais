@@ -2,9 +2,11 @@ using DrWatson
 @quickactivate "rtip-ais"
 
 using CairoMakie
+using Colors
 using DelimitedFiles
 using Glob
 using Interpolations
+using LazyGrids
 using NCDatasets
 using NetCDF
 using Random
