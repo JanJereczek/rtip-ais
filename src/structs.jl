@@ -1,18 +1,13 @@
-
 struct AQEFResults{T<:AbstractFloat}
-    dir::String
     xps::Vector{String}
     n_xps::Int
     t_1D::Vector{Vector{T}}
     f::Vector{Vector{T}}
     V_sle::Vector{Vector{T}}
     t_2D::Vector{Vector{T}}
-    bmb::Vector{Vector{T}}
-    smb::Vector{Vector{T}}
-    cmb::Vector{Vector{T}}
 end
 
-function AQEFResults(T, dir, xps::Vector{String})
+function AQEFResults(T, xps::Vector{String})
     n_xps = length(xps)
     
     t_1D = Vector{Vector{T}}(undef, n_xps)
@@ -20,23 +15,55 @@ function AQEFResults(T, dir, xps::Vector{String})
     V_sle = Vector{Vector{T}}(undef, n_xps)
 
     t_2D = Vector{Vector{T}}(undef, n_xps)
-    bmb = Vector{Vector{T}}(undef, n_xps)
-    smb = Vector{Vector{T}}(undef, n_xps)
-    cmb = Vector{Vector{T}}(undef, n_xps)
+
 
     for (i, xp) in enumerate(xps)
-        xpdir = joinpath([dir, xp, "0"])
+        xpdir = joinpath([xp, "0"])
 
         t_1D[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "time")
         f[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "hyst_f_now")
         V_sle[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "V_sle")
 
         t_2D[i] = ncread(joinpath(xpdir, "yelmo2D.nc"), "time")
-        bmb[i] = vec(mean(ncread(joinpath(xpdir, "yelmo2D.nc"), "bmb"), dims = (1, 2)))
-        smb[i] = vec(mean(ncread(joinpath(xpdir, "yelmo2D.nc"), "smb"), dims = (1, 2)))
-        cmb[i] = vec(mean(ncread(joinpath(xpdir, "yelmo2D.nc"), "cmb"), dims = (1, 2)))
     end
-    AQEFResults(dir, xps, n_xps, t_1D, f, V_sle, t_2D, bmb, smb, cmb)
+    AQEFResults(xps, n_xps, t_1D, f, V_sle, t_2D)
+end
+
+struct MaskedMassbalance{T}
+    time::Vector{T}
+    bmb::Vector{T}
+    smb::Vector{T}
+    cmb::Vector{T}
+    mb_net::Vector{T}
+    mb_resid::Vector{T}
+end
+
+function masked_massbalance(file, t1, t2, mask; T = Float32)
+    t = ncread(file, "time")
+    k_offset = findfirst(t .>= t1) - 1
+    time = t[t1 .<= t .<= t2]
+    nt = length(time)
+    bmb = zeros(nt)
+    smb = zeros(nt)
+    mb_net = zeros(nt)
+    mb_resid = zeros(nt)
+    for k in 1:nt
+        if isnothing(mask)
+            mask_applied = ncslice(file, "H_ice", k + k_offset) .> 1
+        else
+            mask_applied = mask
+        end
+        bmb[k] = mean(ncslice(file, "bmb", k + k_offset)[mask_applied])
+        smb[k] = mean(ncslice(file, "smb", k + k_offset)[mask_applied])
+        mb_net[k] = mean(ncslice(file, "mb_net", k + k_offset)[mask_applied])
+        if occursin("sm", file)
+            nothing
+        else
+            mb_resid[k] = mean(ncslice(file, "mb_resid", k + k_offset)[mask_applied])
+        end
+    end
+    cmb = mb_net .- bmb .- smb
+    return MaskedMassbalance(time, T.(bmb), T.(smb), T.(cmb), T.(mb_net), T.(mb_resid))
 end
 
 struct EquilResults{T<:AbstractFloat}
@@ -77,54 +104,4 @@ function hm!(ax, eql::EquilResults, f; kwargs...)
     heatmap!(ax, z_srf .* f_ice; kwargs...)
     contour!(ax, f_grnd .+ f_ice, levels = [1.9], color = :red, linewidth = 2)
     return nothing
-end
-
-struct Transect
-    i1::Int
-    i2::Int
-    j1::Int
-    j2::Int
-end
-makeline(ax, tr::Transect; kwargs...) = lines!(ax, [tr.i1, tr.i2], [tr.j1, tr.j2]; kwargs...)
-
-
-struct PrecomputedTransect{T<:AbstractFloat}
-    tr::Transect
-    x::Vector{T}
-    y::Vector{T}
-    dist::Vector{T}
-end
-
-function line_on(tr::Nothing, X, Y)
-    return nothing
-end
-
-function line_on(tr::Transect, X, Y)
-
-    ii = [tr.i1, tr.i2]
-    jj = [tr.j1, tr.j2]
-    i1 = minimum(ii)
-    i2 = maximum(ii)
-    j1 = minimum(jj)
-    j2 = maximum(jj)
-
-    x1, x2 = X[tr.i1, tr.j1], X[tr.i2, tr.j2]
-    y1, y2 = Y[tr.i1, tr.j1], Y[tr.i2, tr.j2]
-
-    if abs(tr.i1 - tr.i2) > abs(tr.j1 - tr.j2)
-        x = X[i1:i2, 1]
-        m = (y2 - y1) / (x2 - x1)
-        p = y1 - m * x1
-        y = m .* x .+ p
-    else
-        y = Y[1, j1:j2]
-        m = (x2 - x1) / (y2 - y1)
-        p = x1 - m * y1
-        x = m .* y .+ p
-    end
-
-    dist = sqrt.((x .- X[tr.i1, tr.j1]).^2 .+ (y .- Y[tr.i1, tr.j1]).^2)
-    idx = sortperm(dist)
-    
-    return PrecomputedTransect(tr, x[idx], y[idx], dist[idx])
 end

@@ -71,3 +71,46 @@ function load_ssps(scale; wrt = :pd)
     view(ssp5, :, 2) .*= scale
     return ssp1, ssp2, ssp3, ssp5
 end
+
+# struct StichedData1D{T}
+#     files::Vector{String}
+#     t_vecs::Vector{Vector{T}}
+#     t_stiched::Vector{T}
+# end
+
+# function StichedData1D(files)
+#     t_vecs = [ncread(file, "time") for file in files]
+#     t_stiched = vcat(t_vecs[1], t_vecs[2] .+ t_vecs[1][end])
+#     return StichedData1D(files, t_vecs, t_stiched)
+# end
+
+# struct StichedData2D{T}
+#     files::Vector{String}
+#     t_vecs::Vector{Vector{T}}
+#     t_vecs_offset::Vector{Vector{T}}
+#     t_stiched::Vector{T}
+#     t_end::Vector{T}
+# end
+
+# function StichedData2D(files)
+#     t_vecs = [ncread(file, "time") for file in files]
+#     t_vecs_offset = [t_vecs[1], t_vecs[2] .+ t_vecs[1][end]] 
+#     t_stiched = vcat(t_vecs_offset...)
+#     t_end = vcat(t_vecs_offset[1][end], t_vecs_offset[2][end])
+#     return StichedData2D(files, t_vecs, t_vecs_offset, t_stiched, t_end)
+# end
+
+# function NetCDF.ncread(sd::StichedData1D, var::String)
+#     return vcat([ncread(sd.files[i], var) for i in 1:length(sd.files)]...)
+# end
+
+# function NetCDF.ncread(sd::StichedData2D, var::String, time)
+#     file_idx = findfirst(sd.t_end .>= time)
+#     time_idx = findfirst(sd.t_vecs_offset[file_idx] .>= time)
+#     return dropdims(ncread(sd.files[file_idx], var, start = [1, 1, time_idx],
+#         count = [-1, -1, 1]), dims = 3)
+# end
+
+
+ncslice(file, var, idx) = dropdims(
+    ncread(file, var, start = [1, 1, idx], count = [-1, -1, 1]), dims = 3)
