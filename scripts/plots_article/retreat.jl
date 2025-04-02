@@ -23,7 +23,7 @@ eql = EquilResults(T, eqldir)
 ############################################################################
 # A simple mb plot for the appendix
 ############################################################################
-plot_mb = true
+plot_mb = false
 
 if plot_mb
     lw = 3
@@ -79,16 +79,31 @@ set_theme!(theme_latexfonts())
 ms1, ms2 = 8, 15
 nrows, ncols = 3, 4
 forcing_frames = reshape([0, 0, 1.15, 1.35, 4.2, 4.4, 5.8, 6.0, 6.7, 7.1, 7.6, 7.8], ncols, nrows)'
-state_labels = latexify.(reshape(0:11, ncols, nrows)')
+state_labels = string.(reshape(1:12, ncols, nrows)')
 fig = Figure(size=(1400, 1050), fontsize = 24)
 axs = [Axis(fig[i+1, j], aspect = AxisAspect(aratio)) for i in 1:nrows, j in 1:ncols]
-s = 50
+s = 200
+for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
+    if i > 1 || j > 1
+        forcing = forcing_frames[i, j]
+        if mod(j, 2) == 1
+            if i == 1 && j == 3
+                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2,
+                    color = :gray, label = "Bifurcation")
+            else
+                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2,
+                    color = :gray)
+            end
+        end
+    end
+end
 for k in 1:aqef.n_xps
     lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification, aqef.V_sle[k][1:s:end],
         linewidth = lws[k], label = xp_labels[k])
 end
 scatterlines!(axs[1, 1], eql.f ./ polar_amplification, eql.V_sle;
     linewidth = lws[xp_idx], color = :black, label = "EQL", markersize = ms1)
+text!(axs[1, 1], 9, 50, text = "(1)", color = :grey10, fontsize = 30, font = :bold)
 axs[1, 1].xticks = 0:2:12
 axs[1, 1].xminorticks = 0:0.2:12
 axs[1, 1].yticks = 0:10:60
@@ -150,18 +165,18 @@ YY = Y[ii, jj]
 # transects = permutedims(reshape(repeat(ptrs, inner = 2), ncols, nrows))
 
 xl = [
-    (-2000, -1000),
+    (-1900, -900),
     (700, 1400),
-    (-500, 500),
+    (-600, 400),
     (400, 1400),
     (1300, 2500)
 ]
 yl = [
-    (-600, 400),
+    (-800, 200),
     (-2300, -1600),
-    (900, 1900),
-    (-1700, -700),
-    (-1100, 100),
+    (800, 1800),
+    (-1600, -600),
+    (-1200, 0),
 ]
 
 xlims_frames = permutedims(reshape([nothing, nothing, xl[1], xl[1], xl[2], xl[2],
@@ -170,18 +185,18 @@ ylims_frames = permutedims(reshape([nothing, nothing, yl[1], yl[1], yl[2], yl[2]
     yl[3], yl[3], yl[4], yl[4], yl[5], yl[5]], ncols, nrows))
 
 text_offsets = permutedims(reshape([
-    (0, 0),         # 0
-    (7, -33),         # 1
-    (7, -12),      # 2
-    (-20, -32),     # 3
-    (7, -10),       # 4
-    (-17, -10),       # 5
-    (7, -11),     # 6
-    (-18, -20),       # 7
-    (7, -15),       # 8
-    (-22, -15),     # 9
-    (5, -10),       # 10
-    (10, -22),       # 11
+    (0, 0),         # 1
+    (7, -40),         # 2
+    (7, -12),      # 3
+    (-20, -32),     # 4
+    (7, -10),       # 5
+    (-20, -30),       # 6
+    (7, -11),     # 7
+    (-19, -30),       # 8
+    (7, -15),       # 9
+    (-40, -20),     # 10
+    (5, -10),       # 11
+    (-40, -20),       # 12
 ], ncols, nrows))
 
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
@@ -198,16 +213,6 @@ subregion_fontsize = 22
 for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     if i > 1 || j > 1
         forcing = forcing_frames[i, j]
-
-        if mod(j, 2) == 1
-            if i == 1 && j == 3
-                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2,
-                    color = :gray, label = "Bifurcation")
-            else
-                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2,
-                    color = :gray)
-            end
-        end
 
         if heatmap_frames == "aqef" || (i == 1 && j == 2)
             i3 = findfirst(aqef.f[xp_idx] ./ polar_amplification .>= forcing)
@@ -243,8 +248,9 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
         # if transects[i, j] !== nothing
         #     lines!(axs[i, j], transects[i, j].x, transects[i, j].y; color = :orange, linewidth = 3)
         # end
-        text!(axs[i, j], -2500, -2500, color = :white, font = :bold, text=state_labels[i, j],
-            fontsize = 30)
+        statlab = state_labels[i, j]
+        text!(axs[i, j], -2500, -2500, color = :white, font = :bold,
+            text="("*statlab*")", fontsize = 30)
         xlims!(axs[i, j], extrema(XX))
         ylims!(axs[i, j], extrema(YY))
     end
@@ -267,8 +273,8 @@ Colorbar(fig[1, 3], vertical = false, width = Relative(relwidth), valign = 2,
     label = L"Ice surface elevation $z_s$ (km)",
     ticks = (vcat([1], 1000:1000:4000), latexify.(0:4)); cmaps["z_srf"]...)
 elem_1 = LineElement(color = :red, linewidth = 2)
-elem_2 = LineElement(color = :orange, linewidth = 3)
-Legend(fig[1, 4], [elem_1], ["Grounding line"])
+elem_2 = LineElement(color = :orange, linewidth = 2)
+Legend(fig[1, 4], [elem_1, elem_2], ["Grounding line", "Highlighted region"])
 
 rowsize_base = 300
 rowgap!(fig.layout, 5)
