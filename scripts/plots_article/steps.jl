@@ -84,13 +84,14 @@ sort!(sr)
 # @show [length(sr.f[i]) for i in 1:sr.n_visc_cases]
 # @show [length(sr.V[i]) for i in 1:sr.n_visc_cases]
 
-basins = ["Amundsen", "Wilkes", "Recovery", "Wilkes+Recovery", "Aurora"]
+basins = ["WAIS", "WSB high lat", "RSB", "WSB low lat", "ASB"]
 # f_bif = [0.3, 1.8, 2.6, 3.0, 3.5] ./ f_to ./ polar_amplification
 # f_bif = [0.4, 2.0, 2.5, 3.0, 3.4] ./ f_to ./ polar_amplification
+f_bif = [1.25, 4.3, 6.0, 7.11, 7.89]
 V_bif = [55.5, 47.5, 34.5, 23.5, 13.5]
 i_rtip = [[findfirst(V .< V_bif[i]) for i in eachindex(f_bif)] for V in sr.V]
 f_rtip = [sr.f[i][i_rtip[i]] for i in eachindex(i_rtip)]
-f_bif = f_rtip[1]
+# f_bif = f_rtip[1]
 @show i_rtip
 
 lw = 4
@@ -98,15 +99,17 @@ ms = 25
 slines_opts = (linewidth = lw, markersize = ms)
 set_theme!(theme_latexfonts())
 fig = Figure(size=(1000, 500), fontsize = 20)
+cycling_idx = [2, 4, 3, 1, 5]
 
 ax = Axis(fig[1, 1], aspect = AxisAspect(1))
 scatterlines!(ax, f_bif, label = "Bifurcation", color = :black; slines_opts...)
 for i in eachindex(basins)
-    scatterlines!(ax, f_rtip[i], label = visc_labels[i]; slines_opts...)
+    scatterlines!(ax, f_rtip[i], label = visc_labels[i],
+        color = Cycled(cycling_idx[i]); slines_opts...)
 end
 ax.xticks = (eachindex(basins), basins)
 ax.xticklabelrotation = pi/8
-ax.ylabel = L"Critical $f_\mathrm{GMT}$ (K)"
+ax.ylabel = L"$f^\mathrm{crit}$ (K)"
 # axislegend(ax, position = :lt, labelsize = 16)
 ax.ygridvisible = false
 ax.xgridvisible = false
@@ -115,7 +118,7 @@ ylims!(ax, (0, 8))
 ax_ocean = Axis(fig[1, 1], aspect = AxisAspect(1))
 hidexdecorations!(ax_ocean)
 ylims!(ax_ocean, (0, 8 * polar_amplification * f_to))
-ax_ocean.ylabel = L"Critical $f_o$ (K)"
+ax_ocean.ylabel = L"$f^\mathrm{crit}_o$ (K)"
 ax_ocean.ytickcolor = :gray60
 ax_ocean.yticklabelcolor = :gray60
 ax_ocean.ylabelcolor = :gray60
@@ -126,11 +129,12 @@ ax_ocean.xgridvisible = false
 ax2 = Axis(fig[1, 2], aspect = AxisAspect(1))
 hlines!(ax2, 0, color = :gray70, linestyle = :dash, linewidth = lw)
 for i in eachindex(basins)
-    scatterlines!(ax2, f_rtip[i] .- f_bif, label = visc_labels[i]; slines_opts...)
+    scatterlines!(ax2, f_rtip[i] .- f_bif, label = visc_labels[i],
+        color = Cycled(cycling_idx[i]); slines_opts...)
 end
 ax2.xticks = (eachindex(basins), basins)
 ax2.xticklabelrotation = pi/8
-ax2.ylabel = L"$\gamma_\mathrm{GMT}$ (K)"
+ax2.ylabel = L"$\gamma$ (K)"
 ax2.ygridvisible = false
 ax2.xgridvisible = false
 ax2.yticks = -1.6:0.2:0.1
@@ -148,7 +152,7 @@ ax2_ocean.yaxisposition = :right
 ax2_ocean.ygridvisible = false
 ax2_ocean.xgridvisible = false
 
-Legend(fig[0, 1:2], ax, nbanks = 6, labelsize = 16)
+Legend(fig[0, 1:2], ax, nbanks = 6)
 
 rowsize!(fig.layout, 0, 5)
 fig

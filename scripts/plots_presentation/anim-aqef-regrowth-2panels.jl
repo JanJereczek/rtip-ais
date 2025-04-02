@@ -1,8 +1,9 @@
 include("../intro.jl")
 
-dir = datadir("output/ais/hyster/16km/regrowth/aqef/0")
+sfx = ""
+dir = datadir("output/ais/hyster/16km/regrowth/aqef/pmpt-normvisc-fastnormforcing$sfx/0")
 file1D = "$dir/yelmo1D.nc"
-file2D = "$dir/yelmo2Dsm.nc"
+file2D = "$dir/yelmo2D.nc"
 file_bsl = "$dir/bsl.nc"
 
 nx, ny = size(ncread(file2D, "x2D"))
@@ -69,7 +70,7 @@ axs[1].ylabelcolor = colors[1]
 axs[1].xlabel = "Time (kyr)"
 axs[1].ylabel = L"$\Delta T_\mathrm{ocn}$ (K)"
 xlims!(axs[1], (0, n_1D))
-ylims!(axs[1], (-0.1, 6))
+
 axs[1].xticks = tticks_1D
 
 ax2 = Axis(fig[1, 1], aspect = AxisAspect(1))
@@ -79,7 +80,13 @@ ax2.yticklabelcolor = colors[2]
 ax2.ylabelcolor = colors[2]
 hidexdecorations!(ax2)
 xlims!(ax2, (0, n_1D))
-ylims!(ax2, (-1, 60))
+if sfx == ""
+    ylims!(axs[1], (-0.1, 6))
+    ylims!(ax2, (-1, 60))
+else
+    ylims!(axs[1], (-2, 3.5))
+    ylims!(ax2, (0, 55))
+end
 
 hidedecorations!(axs[ncols])
 # hidespines!(axs[ncols])
@@ -104,6 +111,6 @@ rowgap!(fig.layout, 1, 10)
 rowgap!(fig.layout, 2, -45)
 fig
 
-record(fig, plotsdir("16km/anim-regrowth-aqef.mp4"), 1:n_2D, framerate = 24) do i
+record(fig, plotsdir("16km/regrowth-aqef$sfx.mp4"), 1:n_2D, framerate = 12) do i
     k[] = i
 end

@@ -1,6 +1,8 @@
 include("../intro.jl")
 
-dir = datadir("output/ais/hyster/16km/aqef/pmpt-hydro-25K/1")
+visc_type = "lowvisc"
+dir = datadir("output/ais/hyster/16km/retreat/aqef/pmpt-$visc_type-normforcing-withrestarts/0")
+
 file1D = "$dir/yelmo1D.nc"
 file2D = "$dir/yelmo2Dsm.nc"
 file_bsl = "$dir/bsl.nc"
@@ -60,7 +62,7 @@ fs = 22
 lw = 3
 rw = 0.8
 tol = 1e-8
-tticks_vals_1D = collect(range(0, stop = n_1D, step = 20e3/dt_1D))
+tticks_vals_1D = collect(range(0, stop = n_1D, step = 50e3/dt_1D))
 tticks_1D = (tticks_vals_1D, latexify.(Int.(tticks_vals_1D .* dt_1D ./ 1e3)))
 tticks_vals_2D = collect(range(0, stop = n_2D, step = 20e3/dt_2D))
 tticks_2D = (tticks_vals_2D, latexify.(Int.(tticks_vals_2D .* dt_2D ./ 1e3)))
@@ -110,6 +112,6 @@ rowgap!(fig.layout, 1, 10)
 rowgap!(fig.layout, 2, -45)
 fig
 
-record(fig, plotsdir("16km/retreat-aqef.mp4"), 1:n_2D, framerate = 24) do i
+record(fig, plotsdir("16km/retreat-aqef.mp4"), 1:n_2D-30, framerate = 24) do i
     k[] = i
 end

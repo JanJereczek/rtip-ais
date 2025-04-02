@@ -2,20 +2,25 @@ include("../intro.jl")
 
 T = Float32
 visc_type = "normvisc"    # "equil" or "aqef"
+regrowth_dir = datadir("output/ais/hyster/16km/regrowth")
 xps = [
-    "pmpt-$visc_type-no_isos",
-    "pmpt-$visc_type-fastnormforcing",
+    "$regrowth_dir/aqef/pmpt-$visc_type-dpr",
+    "$regrowth_dir/aqef/pmpt-$visc_type-upl",
+    "$regrowth_dir/aqef/pmpt-$visc_type-fastnormforcing-restarted",
+    "$regrowth_dir/aqef/pmpt-$visc_type-fastnormforcing",
 ]
 xp_labels = [
+    "DPR",
     "UPL",
-    # "DPR",
+    nothing,
     "REF",
 ]
-lws = [3, 5]
-regrowth_dir = datadir("output/ais/hyster/16km/regrowth")
-aqef = AQEFResults(T, "$regrowth_dir/aqef", xps)
-# eqldir = datadir("$regrowth_dir/equil/")
-# eql = EquilResults(T, eqldir)
+lws = [3, 3, 5, 5]
+cycling_colors = [2, 3, 1, 1]
+aqef = AQEFResults(T, xps)
+
+eqldir = datadir("output/ais/hyster/16km/regrowth/equil")
+eql = EquilResults(T, eqldir)
 
 ############################################################################
 # The retreat comparison
@@ -25,21 +30,30 @@ polar_amplification = 1.8
 f_to = 0.25
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xp_idx = aqef.n_xps
+f_ref = aqef.f[end] ./ polar_amplification
+stiching_forcing = 2
+stiching_idx = findfirst(f_ref .<= stiching_forcing)
 
 set_theme!(theme_latexfonts())
 ms1, ms2 = 8, 15
 nrows, ncols = 3, 4
-forcing_frames = reshape([10, 7.6, 7.4, 7, 6, 5, 4, 3, 2, 1, 0, -1], ncols, nrows)'
+forcing_frames = reshape([nothing, 7.6, 7.4, 7, 6.8, 3, 2.2, 2, 1.6, 1.2, 0.2, 0.1], ncols, nrows)'
 state_labels = latexify.(reshape(0:11, ncols, nrows)')
 fig = Figure(size=(1700, 1320), fontsize = 24)
 axs = [Axis(fig[i+1, j], aspect = AxisAspect(1)) for i in 1:nrows, j in 1:ncols]
 s = 50
 for k in 1:aqef.n_xps
-    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification, aqef.V_sle[k][1:s:end],
-        linewidth = lws[k], label = xp_labels[k])
+    if k < aqef.n_xps
+        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification, aqef.V_sle[k][1:s:end],
+            linewidth = lws[k], label = xp_labels[k], color = Cycled(cycling_colors[k]))
+    else
+        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification,
+            aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
+            color = Cycled(cycling_colors[k]))
+    end
 end
-# scatterlines!(axs[1, 1], eql.f ./ polar_amplification, eql.V_sle;
-#     linewidth = lws[xp_idx], color = :black, label = "EQL", markersize = ms1)
+scatterlines!(axs[1, 1], eql.f ./ polar_amplification, eql.V_sle;
+    linewidth = lws[xp_idx], color = :black, label = "EQL", markersize = ms1)
 axs[1, 1].xticks = 0:2:12
 axs[1, 1].xminorticks = 0:0.2:12
 axs[1, 1].yticks = 0:10:60
@@ -50,10 +64,11 @@ axs[1, 1].xaxisposition = :top
 axs[1, 1].xlabel = L"GMT anomaly $f$ (K)"
 axs[1, 1].ylabel = L"AIS volume $V_\mathrm{af}$ (m SLE)"
 ylims!(axs[1, 1], 0, 60)
-xlims!(axs[1, 1], 0, 11)
+xlims!(axs[1, 1], -2, 11)
 fig
 
-file2D = joinpath(aqef.dir, aqef.xps[xp_idx], "0", "yelmo2D.nc")
+file2D_restarted = joinpath(aqef.xps[xp_idx - 1], "0", "yelmo2D.nc")
+file2D = joinpath(aqef.xps[xp_idx], "0", "yelmo2D.nc")
 X = ncread(file2D, "x2D")
 Y = ncread(file2D, "y2D")
 xc = ncread(file2D, "xc")
@@ -86,13 +101,22 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     if i > 1 || j > 1
         forcing = forcing_frames[i, j]
         if heatmap_frames == "aqef" || (i == 1 && j == 2)
-            i3 = argmin( ( aqef.f[xp_idx] ./ polar_amplification .-
+            
+            if forcing > stiching_forcing
+                file2D_plot = file2D
+                plot_index = xp_idx
+            else
+                file2D_plot = file2D_restarted
+                plot_index = xp_idx - 1
+            end
+
+            i3 = argmin( ( aqef.f[plot_index] ./ polar_amplification .-
                 forcing) .^ 2)
-            f_eq = aqef.f[xp_idx][i3] ./ polar_amplification
-            V_eq = aqef.V_sle[xp_idx][i3]
-            frame_index = argmin(abs.(aqef.t_2D[xp_idx] .- aqef.t_1D[xp_idx][i3]))
-            z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D, var_names_2D,
-                frame_index)
+            f_eq = aqef.f[plot_index][i3] ./ polar_amplification
+            V_eq = aqef.V_sle[plot_index][i3]
+            frame_index = argmin(abs.(aqef.t_2D[plot_index] .- aqef.t_1D[plot_index][i3]))
+            z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D_plot,
+                var_names_2D, frame_index)
         else
             i3 = argmin((eql.f ./ polar_amplification .- forcing) .^ 2)
             file_2D_equil = datadir("$eqldir/$(string(i3))/0/yelmo2D.nc")
@@ -121,7 +145,7 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
         heatmap!(axs[i, j], xc, yc, z_srf .* f_ice; cmaps["z_srf"]...)
         contour!(axs[i, j], xc, yc, f_grnd .+ f_ice, levels = [1.9],
             color = :red, linewidth = 2)
-        text!(axs[i, j], -3000, -3000, color = :white, font = :bold,
+        text!(axs[i, j], -2500, -2500, color = :white, font = :bold,
             text=state_labels[i, j], fontsize = 30)
         xlims!(axs[i, j], extrema(XX))
         ylims!(axs[i, j], extrema(YY))
@@ -136,8 +160,7 @@ Colorbar(fig[1, 3], vertical = false, width = Relative(relwidth), valign = 2,
     label = L"Ice surface elevation $z_s$ (km)",
     ticks = (vcat([1], 1000:1000:4000), latexify.(0:4)); cmaps["z_srf"]...)
 elem_1 = LineElement(color = :red, linewidth = 2)
-elem_2 = LineElement(color = :orange, linewidth = 3)
-Legend(fig[1, 4], [elem_1, elem_2], ["Grounding line", "Transects"])
+Legend(fig[1, 4], [elem_1], ["Grounding line"])
 
 rowgap!(fig.layout, 5)
 colgap!(fig.layout, 5)
