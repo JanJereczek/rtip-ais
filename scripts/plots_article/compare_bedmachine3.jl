@@ -1,5 +1,6 @@
 include("../intro.jl")
-file_t0 = datadir("output/ais/hyster/16km/retreat/aqef/pmpt-$visc_type-normforcing-withrestarts/0/yelmo2D.nc")
+file_t0 = datadir("output/ais/hyster/16km/retreat/aqef/"*
+    "pmpt-normvisc-normforcing-withrestarts/0/yelmo2D.nc")
 file_t0_hr = datadir("BedMachineAntarctica-v3.nc")
 
 x, y = ncread(file_t0, "xc"), ncread(file_t0, "yc")
@@ -53,8 +54,8 @@ axs = [Axis(fig[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
 axs[1, 1].title = "Antarctica"
 axs[1, 2].title = "West-Antarctica"
 axs[1, 3].title = "Aurora and Wilkes"
-axs[1, 1].ylabel = "Present day"
-axs[2, 1].ylabel = "Without ice"
+axs[1, 1].ylabel = "Present day (DPR)"
+axs[2, 1].ylabel = "Without ice (UPL)"
 axs[1, 1].ylabelvisible = true
 axs[2, 1].ylabelvisible = true
 heatmap!(axs[1, 1], view(z_bed_t0_hr, i1_ais:i2_ais, j1_ais:j2_ais); cmaps["z_bed5"]...)
@@ -93,3 +94,4 @@ Legend(fig[nrows+1, 2:3], [elem_1], [L"$z_b = 58 \, \mathrm{m}$ isoline"], valig
 rowgap!(fig.layout, 10)
 colgap!(fig.layout, 10)
 save(plotsdir("16km/bedrock/bedmachine3.png"), fig)
+save(plotsdir("16km/bedrock/bedmachine3.pdf"), fig)

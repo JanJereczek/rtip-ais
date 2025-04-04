@@ -43,8 +43,8 @@ axs = [Axis(fig[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
 axs[1, 1].title = "Antarctica"
 axs[1, 2].title = "West-Antarctica"
 axs[1, 3].title = "Aurora and Wilkes"
-axs[1, 1].ylabel = "Present day"
-axs[2, 1].ylabel = "Without ice"
+axs[1, 1].ylabel = "Present day (DPR)"
+axs[2, 1].ylabel = "Without ice (UPL)"
 axs[1, 1].ylabelvisible = true
 axs[2, 1].ylabelvisible = true
 heatmap!(axs[1, 1], view(z_bed_t0, i1_ais:i2_ais, j1_ais:j2_ais); cmaps["z_bed5"]...)
