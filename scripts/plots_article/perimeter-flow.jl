@@ -23,7 +23,7 @@ k_bif_2D = 53
 t_end_bif = t1D[findfirst(f1D ./ polar_amplification .< 7.5)]
 k_end_bif = argmin(abs.(t2D .- t_end_bif))
 x1, x2 = 500, 1500
-y1, y2 = 200, 1200
+y1, y2 = 300, 1300
 
 k_snaps = [k_bif_2D, k_bif_2D + 2, k_bif_2D + 4]
 vars = ["taud_acy", "uy_s", "taud_acx", "ux_s", "smb", "visc_eff_int"]

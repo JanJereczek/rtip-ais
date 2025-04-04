@@ -1,3 +1,5 @@
+lcolor(x) = x isa Symbol ? x : Cycled(x)
+
 z_srf_map = cgrad([:gray10, :gray95], 0:0.1:1, categorical = true)
 z_bed_map = cgrad(:oleron, [2/3])
 z_bed_map2 = cgrad(:oleron, [3/4])

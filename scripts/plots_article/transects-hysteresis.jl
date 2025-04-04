@@ -27,19 +27,34 @@ i_bif = [findlast(f .<= f_bif[i]) for i in 1:n_tra] .+ 2
 t_bif = [t1D[i_bif[i]] for i in 1:n_tra]
 t_end = t_bif .+ dt_grz .* n_grz
 
+# xl = [
+#     (-2000, -1000),
+#     (700, 1400),
+#     (-500, 500),
+#     (400, 1400),
+#     (1300, 2500)
+# ]
+# yl = [
+#     (-600, 400),
+#     (-2300, -1600),
+#     (900, 1900),
+#     (-1700, -700),
+#     (-1100, 100),
+# ]
+
 xl = [
-    (-2000, -1000),
+    (-1900, -900),
     (700, 1400),
-    (-500, 500),
+    (-600, 400),
     (400, 1400),
     (1300, 2500)
 ]
 yl = [
-    (-600, 400),
+    (-800, 200),
     (-2300, -1600),
-    (900, 1900),
-    (-1700, -700),
-    (-1100, 100),
+    (800, 1800),
+    (-1600, -600),
+    (-1000, 0),
 ]
 mask(X, Y, xl, yl) = (xl[1] .<= X .<= xl[2]) .& (yl[1] .<= Y .<= yl[2])
 masks = [ mask(X, Y, xl[i], yl[i]) for i in 1:n_tra ]
@@ -94,10 +109,10 @@ for i in eachindex(i_bif)
     vlines!(axs_ts[i], t2D[grz_steps] ./ 1f3, color = [(c, 0.8) for c in catjet],
         linewidth = 1)
     hlines!(axs_ts[i], 0, color = :black, linewidth = lw1, linestyle = :dash)
-    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].smb, linewidth = lw1,
-        label = "surface")
     lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].bmb, linewidth = lw1,
         label = "basal")
+    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].smb, linewidth = lw1,
+        label = "surface")
     lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].cmb, linewidth = lw1,
         label = "calving", color = :gray70)
     lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].mb_net,
@@ -125,14 +140,28 @@ for i in eachindex(i_bif)
             ncslice(file2D, "f_grnd", grz_steps[l]) .*
             (ncslice(file2D, "H_ice", grz_steps[l]) .> 100),
             levels = [0.5], color = catjet[l], linewidth = lw1)
-        z_srf = ncslice(file2D, "z_bed", grz_steps[l]) .+
-            ncslice(file2D, "H_ice", grz_steps[l]) .* ncslice(file2D, "f_grnd", grz_steps[l])
-        no_ice = (ncslice(file2D, "f_grnd", grz_steps[l]) .< 0.01) .|
-            (ncslice(file2D, "H_ice", grz_steps[l]) .< 1)
+        z_bed = ncslice(file2D, "z_bed", grz_steps[l])
+        H_ice = ncslice(file2D, "H_ice", grz_steps[l])
+        f_grnd = ncslice(file2D, "f_grnd", grz_steps[l])
+        z_srf = z_bed .+ H_ice .* f_grnd
+        no_ice = (f_grnd .< 0.01) .|| (H_ice .< 1)
         z_srf[no_ice] .= NaN
+        z_srf_cross = crossection(z_srf, ii[1:end-1], jj[1:end-1])
+        z_bed_cross = crossection(z_bed, ii[1:end-1], jj[1:end-1])
+        grindex = findlast(isnan.(z_srf_cross))
+        z_srf_cross[grindex] = z_bed_cross[grindex]
+
+        # if (length(z_srf_cross[.!isnan.(z_srf_cross)])) > 1 &&
+        #     (z_srf_cross[.!isnan.(z_srf_cross)][1] > z_srf_cross[.!isnan.(z_srf_cross)][2])
+            
+        #     z_srf_cross[.!isnan.(z_srf_cross)][1] = NaN
+        # end
+
+        if i == 1 && l == 4
+            z_srf_cross[grindex-1] = NaN
+        end
         
-        lines!(axs_tr[i], rt[1:end-1], crossection(z_srf, ii[1:end-1], jj[1:end-1]),
-            color = catjet[l], linewidth = lw1)
+        lines!(axs_tr[i], rt[1:end-1], z_srf_cross, color = catjet[l], linewidth = lw1)
     end
 
     heatmap!(axs_hm[i], x, y, tr_mask, colormap = cgrad([tr_color, tr_color]),

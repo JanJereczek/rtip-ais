@@ -9,18 +9,19 @@ xps = [
     "$regrowth_dir/aqef/pmpt-$visc_type-fastnormforcing-restarted",
     "$regrowth_dir/aqef/pmpt-$visc_type-fastnormforcing",
 ]
+aqef = AQEFResults(T, xps)
+eqldir = datadir("output/ais/hyster/16km/regrowth/equil")
+eql = EquilResults(T, eqldir)
+
 xp_labels = [
     "DPR",
     "UPL",
     nothing,
     "REF",
 ]
-lws = [3, 3, 5, 5]
-cycling_colors = [2, 3, 1, 1]
-aqef = AQEFResults(T, xps)
-
-eqldir = datadir("output/ais/hyster/16km/regrowth/equil")
-eql = EquilResults(T, eqldir)
+lw1, lw2 = 3, 5
+lws = [lw1, lw1, lw2, lw2]
+cycling_colors = [1, 3, :steelblue1, :steelblue1]
 
 ############################################################################
 # The retreat comparison
@@ -28,34 +29,36 @@ eql = EquilResults(T, eqldir)
 
 polar_amplification = 1.8
 f_to = 0.25
+f2014 = 1.2
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xp_idx = aqef.n_xps
 f_ref = aqef.f[end] ./ polar_amplification
 stiching_forcing = 2
 stiching_idx = findfirst(f_ref .<= stiching_forcing)
+cropx, cropy = 20, 35
+aratio = (381 - 2*cropx) / (381 - 2*cropy)
 
 set_theme!(theme_latexfonts())
-ms1, ms2 = 8, 15
+ms1, ms2 = 8, 18
 nrows, ncols = 3, 4
-forcing_frames = reshape([nothing, 7.6, 7.4, 7, 6.8, 3, 2.2, 2, 1.6, 1.2, 0.2, 0.1], ncols, nrows)'
-state_labels = latexify.(reshape(0:11, ncols, nrows)')
-fig = Figure(size=(1700, 1320), fontsize = 24)
-axs = [Axis(fig[i+1, j], aspect = AxisAspect(1)) for i in 1:nrows, j in 1:ncols]
-s = 50
-for k in 1:aqef.n_xps
-    if k < aqef.n_xps
-        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification, aqef.V_sle[k][1:s:end],
-            linewidth = lws[k], label = xp_labels[k], color = Cycled(cycling_colors[k]))
+forcing_frames = permutedims(reshape([nothing, 7.6, 7.2, 6.8, 3.8, 3, 2.2, 1.8, 1.6, 1, 0.2, -2], ncols, nrows))
+state_labels = string.(reshape(1:12, ncols, nrows)')
+shade = [(7.45, 7.55), (6.85, 6.95), (3.7, 3.8), (4.1, 4.2) .- f2014, (2.05, 2.15), (1.7, 1.8), (1.3, 1.4), (0.1, 0.2)]
+
+fig = Figure(size=(1400, 1050), fontsize = 24)
+axs = [Axis(fig[i+1, j], aspect = AxisAspect(aratio)) for i in 1:nrows, j in 1:ncols]
+for i in eachindex(shade)
+    sshade = (shade[i][1]:0.01:shade[i][2]) .+ f2014
+    if i == 1
+        vlines!(axs[1, 1], sshade, alpha = 0.2,
+        color = :gray70, label = "Bifurcation")
     else
-        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification,
-            aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
-            color = Cycled(cycling_colors[k]))
+        vlines!(axs[1, 1], sshade, alpha = 0.2, color = :gray70)
     end
 end
-scatterlines!(axs[1, 1], eql.f ./ polar_amplification, eql.V_sle;
-    linewidth = lws[xp_idx], color = :black, label = "EQL", markersize = ms1)
-axs[1, 1].xticks = 0:2:12
-axs[1, 1].xminorticks = 0:0.2:12
+
+axs[1, 1].xticks = -2:2:12
+axs[1, 1].xminorticks = -2:0.2:12
 axs[1, 1].yticks = 0:10:60
 axs[1, 1].yminorticks = IntervalsBetween(10)
 axs[1, 1].xminorgridvisible = true
@@ -64,7 +67,7 @@ axs[1, 1].xaxisposition = :top
 axs[1, 1].xlabel = L"GMT anomaly $f$ (K)"
 axs[1, 1].ylabel = L"AIS volume $V_\mathrm{af}$ (m SLE)"
 ylims!(axs[1, 1], 0, 60)
-xlims!(axs[1, 1], -2, 11)
+xlims!(axs[1, 1], -1, 11)
 fig
 
 file2D_restarted = joinpath(aqef.xps[xp_idx - 1], "0", "yelmo2D.nc")
@@ -75,26 +78,33 @@ xc = ncread(file2D, "xc")
 yc = ncread(file2D, "yc")
 nx, ny = size(ncread(file2D, "x2D"))
 
-crop = 20
-ii = crop+1:nx-crop
-jj = crop+1:ny-crop
+ii = cropx+1:nx-cropx
+jj = cropy+1:ny-cropy
 XX = X[ii, jj]
 YY = Y[ii, jj]
 
 text_offsets = permutedims(reshape([
-    (0, 0),         # 0
-    (7, -33),         # 1
-    (7, -12),      # 2
-    (-20, -32),     # 3
-    (7, -10),       # 4
-    (-17, -10),       # 5
-    (7, -11),     # 6
-    (-18, -20),       # 7
-    (7, -15),       # 8
-    (-22, -15),     # 9
-    (5, -10),       # 10
-    (10, -22),       # 11
+    nothing,         # 1
+    (-25, -10),         # 2
+    (10, -12),      # 3
+    (-25, -25),     # 4
+    (-15, -40),       # 5
+    (-25, -30),       # 6
+    (-25, -20),     # 7
+    (-25, -20),       # 8
+    (10, -15),       # 9
+    (10, -15),     # 10
+    (-15, -40),       # 11
+    (10, 0),       # 12
 ], ncols, nrows))
+
+xlims_frames = permutedims(reshape([nothing, (500, 1500), (500, 1500),
+    nothing, nothing, nothing, nothing, nothing, nothing,
+    nothing, nothing, nothing], ncols, nrows))
+
+ylims_frames = permutedims(reshape([nothing, (300, 1300), (300, 1300),
+    nothing, nothing, nothing, nothing, nothing, nothing,
+    nothing, nothing, nothing], ncols, nrows))
 
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
 for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
@@ -128,30 +138,45 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
         end
         @show i3, f_eq, V_eq
 
-        if mod(j, 2) == 1
-            if i == 1 && j == 3
-                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2, color = :gray, label = "Bifurcations")
-            else
-                vlines!(axs[1, 1], forcing:0.01:forcing_frames[i, j+1], alpha = 0.2, color = :gray)
-            end
-        end
-
-        scatter!(axs[1, 1], f_eq, V_eq, color = :red, markersize = ms2)
-        text!(axs[1, 1], f_eq, V_eq, text = state_labels[i, j],
-            color = :grey10, fontsize = 30, font = :bold, offset = text_offsets[i, j])
+        scatter!(axs[1, 1], f_eq .+ f2014, V_eq, color = :red, markersize = ms2)
+        text!(axs[1, 1], f_eq .+ f2014, V_eq, text = state_labels[i, j],
+            color = :red, font = :bold, fontsize = 30, offset = text_offsets[i, j])
 
         hidedecorations!(axs[i, j])
         heatmap!(axs[i, j], xc, yc, z_bed; cmaps["z_bed2"]...)
         heatmap!(axs[i, j], xc, yc, z_srf .* f_ice; cmaps["z_srf"]...)
         contour!(axs[i, j], xc, yc, f_grnd .+ f_ice, levels = [1.9],
             color = :red, linewidth = 2)
+        if xlims_frames[i, j] !== nothing
+            contour!(axs[i, j], xc, yc, (xlims_frames[i, j][1] .< X .< xlims_frames[i, j][2]) .&
+                (ylims_frames[i, j][1] .< Y .< ylims_frames[i, j][2]), levels = [0.5],
+                color = :darkred, linewidth = 3)
+        end
         text!(axs[i, j], -2500, -2500, color = :white, font = :bold,
-            text=state_labels[i, j], fontsize = 30)
+            text="("*state_labels[i, j]*")", fontsize = 30)
         xlims!(axs[i, j], extrema(XX))
         ylims!(axs[i, j], extrema(YY))
     end
 end
+s = 200
+alpha = 1
+for k in 1:aqef.n_xps
+    if k < aqef.n_xps
+        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2014,
+            aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
+            color = lcolor(cycling_colors[k]), alpha = alpha)
+    else
+        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2014,
+            aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
+            color = lcolor(cycling_colors[k]), alpha = alpha)
+    end
+end
 
+# f2014 = 1.12
+scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2014, eql.V_sle;
+    color = :black, label = "EQL", markersize = ms1)
+
+text!(axs[1, 1], 9, 2, font = :bold, text = "(1)", color = :black, fontsize = 30)
 axislegend(axs[1, 1], position = :rt, nbanks = 1)
 relwidth = 0.8
 Colorbar(fig[1, 2], vertical = false, width = Relative(relwidth), valign = 2,
@@ -160,17 +185,20 @@ Colorbar(fig[1, 3], vertical = false, width = Relative(relwidth), valign = 2,
     label = L"Ice surface elevation $z_s$ (km)",
     ticks = (vcat([1], 1000:1000:4000), latexify.(0:4)); cmaps["z_srf"]...)
 elem_1 = LineElement(color = :red, linewidth = 2)
-Legend(fig[1, 4], [elem_1], ["Grounding line"])
+elem_2 = LineElement(color = :darkred, linewidth = 2)
+Legend(fig[1, 4], [elem_1, elem_2], ["Grounding line", "Highlighted region"])
 
+rowsize_base = 300
 rowgap!(fig.layout, 5)
 colgap!(fig.layout, 5)
 rowgap!(fig.layout, 1, -20)
 rowsize!(fig.layout, 1, 1)
-rowsize!(fig.layout, 2, 400)
-rowsize!(fig.layout, 3, 400)
-rowsize!(fig.layout, 4, 400)
-colsize!(fig.layout, 1, 400)
-colsize!(fig.layout, 2, 400)
-colsize!(fig.layout, 3, 400)
-colsize!(fig.layout, 4, 400)
+rowsize!(fig.layout, 2, rowsize_base)
+rowsize!(fig.layout, 3, rowsize_base)
+rowsize!(fig.layout, 4, rowsize_base)
+colsize!(fig.layout, 1, rowsize_base*aratio)
+colsize!(fig.layout, 2, rowsize_base*aratio)
+colsize!(fig.layout, 3, rowsize_base*aratio)
+colsize!(fig.layout, 4, rowsize_base*aratio)
 save(plotsdir("16km/hysteresis/regrowth.png"), fig)
+save(plotsdir("16km/hysteresis/regrowth.pdf"), fig)
