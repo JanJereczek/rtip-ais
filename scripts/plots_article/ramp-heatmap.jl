@@ -62,8 +62,8 @@ end
 
 visc_cases = ["m2stddev", "m1stddev", "nominal", "p1stddev", "p2stddev"]
 visc_labels = [L"$-2 \, \sigma$", L"$-1 \, \sigma$", "nominal", L"$+1 \, \sigma$", L"$+2 \, \sigma$"]
-visc_num_labels = [L"$(5) -2 \, \sigma$", L"$(6) -1 \, \sigma$", L"(7) nominal $\,$",
-    L"$(8) +1 \, \sigma$", L"$(9) +2 \, \sigma$"]
+visc_num_labels = [L"$\textbf{e} \quad -2 \, \sigma$", L"$\textbf{f} \quad -1 \, \sigma$", L"\textbf{g} \quad nominal $\,$",
+    L"$\textbf{h} \quad +1 \, \sigma$", L"$\textbf{i} \quad +2 \, \sigma$"]
 hr = HeatmapRtip{Float32}(visc_cases)
 
 region = "recovery"
@@ -97,6 +97,11 @@ ssp_labels = ["SSP1", "SSP2", "SSP3", "SSP5"]
 ssp_colors = [:darkblue, :lightblue, :orange, :darkred]
 dfdt_min = minimum([minimum(dssp) for dssp in dssps])
 dfdt_max = maximum([maximum(dssp) for dssp in dssps])
+file_rsl_ref = joinpath(hr.paths[1][rsl_index], "yelmo2D.nc")
+X, Y = ncread(file_rsl_ref, "x2D"), ncread(file_rsl_ref, "y2D")
+x, y = ncread(file_rsl_ref, "xc"), ncread(file_rsl_ref, "yc")
+x1, x2, y1, y2 = -500, -100, 900, 1400
+bbox = (x1 .< X .< x2) .&& (y1 .< Y .< y2)
 
 # Let's take some margin
 dfdt_min = 10 ^ floor(log10(dfdt_min))
@@ -145,7 +150,7 @@ jetmap = cgrad(:copper, range(0, stop = 1, length = 8), categorical = true, rev 
 framecolors = [:seagreen, :purple2]
 
 ax_ramp = Axis(fig[2, 1], aspect = AxisAspect(axasp), valign = :top)
-ax_ramp.ylabel = "Forcing (K)"
+ax_ramp.ylabel = "GMT anomaly (K)"
 ax_ramp.xlabel = "Time (kyr)"
 ax_ramp.xaxisposition = :top
 ax_ramp.xminorticksvisible = true
@@ -181,7 +186,7 @@ axs = [Axis(fig[4, j], aspect = AxisAspect(1)) for j in 1:hr.n_visc_cases]
 
 
 logxticks = (-4:2:0, [L"10^{%$n} $\,$" for n in -4:2:0])
-axs[1].ylabel = "Max forcing (K)"
+axs[1].ylabel = "Max GMT anomaly (K)"
 axs[hr.n_visc_cases].yaxisposition = :right
 rsl_index = argmin( (hr.f[1] .- 10.2).^2 .+ (hr.dfdt[1] .- 3e-2).^2 )
 
@@ -204,7 +209,7 @@ for j in eachindex(hr.visc_cases)
 
     axs[j].title = visc_num_labels[j]
     # j in (1,3,5) ? axs[j].xlabel = L"$\mathrm{log}_{10}$ slope (K)" : nothing
-    axs[j].xlabel = L"$\mathrm{log}_{10}$ rate $(\mathrm{K} \, \mathrm{yr}^{-1})$"
+    j == 3 ? axs[j].xlabel = L"$\mathrm{log}_{10}$ rate of GMT anomaly $(\mathrm{K} \, \mathrm{yr}^{-1})$" : nothing
     axs[j].xticks = -4:1:0
     axs[j].xminorticks = -4:0.5:0
     axs[j].xminorticksvisible = true
@@ -285,7 +290,7 @@ for i in eachindex(f_hm)
     contour!(inset_axs[i], ((i1 .<= XX .<= i1+d1) .&& (i2 .<= YY .<= i2+d2)),
         color = :black, linewidth = 2)
     text!(inset_axs[i], 10, 5, font = :bold, color = :black, fontsize = fs-4,
-        text = "0 kyr")
+        text = "t=0 kyr")
         #text = "t = $(Int(round(time[nt] / 1e3, digits = 0))) kyr")
     ax_hm[i].leftspinecolor = framecolors[i]
     ax_hm[i].rightspinecolor = framecolors[i]
@@ -294,14 +299,22 @@ for i in eachindex(f_hm)
     ax_hm[i].spinewidth = 5
 end
 
-text!(ax_ramp, 1.85, 5 ./ pa, text = "(1)", color = :black, font = :bold)
-text!(ax_vol, 37, 53, text = "(2)", color = :black, font = :bold)
+contour!(ax_hm[1], bbox[i1:i1+d1, i2:i2+d2], color = :darkorange, levels = [0.5], linewidth = 3)
+
 if region == "recovery"
-    text!(ax_hm[1], 2, 102, text = "(3) 45 kyr", color = :white, font = :bold)
-    text!(ax_hm[2], 2, 102, text = "(4) 45 kyr", color = :white, font = :bold)
+    text!(ax_ramp, 1.9, 5 ./ pa, text = "a", color = :black, font = :bold)
+    text!(ax_vol, 37, 53, text = "b", color = :black, font = :bold)
+    text!(ax_hm[1], 2, 102, text = "c", color = :white, font = :bold)
+    text!(ax_hm[2], 2, 102, text = "d", color = :white, font = :bold)
+    text!(ax_hm[1], 8, 103, text = "t=45 kyr", color = :white)
+    text!(ax_hm[2], 8, 103, text = "t=45 kyr", color = :white)
 elseif region == "wais"
-    text!(ax_hm[1], 2, 2, text = "(3) 30 kyr", color = :white, font = :bold)
-    text!(ax_hm[2], 2, 2, text = "(4) 30 kyr", color = :white, font = :bold)
+    text!(ax_ramp, 2.0, 0.9 ./ pa, text = "a", color = :black, font = :bold)
+    text!(ax_vol, 27, 57, text = "b", color = :black, font = :bold)
+    text!(ax_hm[1], 2, 2, text = "c", color = :white, font = :bold)
+    text!(ax_hm[2], 2, 2, text = "d", color = :white, font = :bold)
+    text!(ax_hm[1], 8, 3, text = "t=30 kyr", color = :white)
+    text!(ax_hm[2], 8, 3, text = "t=30 kyr", color = :white)
 end
 
 Colorbar(fig[1, 2:3], label = "Bed elevation (km)", vertical = false,
@@ -437,9 +450,6 @@ f_rtip = [sr.f[i][i_rtip[i]] for i in eachindex(i_rtip)]
 plot_rsl_now = false
 nrows = plot_rsl_now ? 3 : 2
 ncols = 2
-file_rsl_ref = joinpath(hr.paths[1][rsl_index], "yelmo2D.nc")
-X, Y = ncread(file_rsl_ref, "x2D"), ncread(file_rsl_ref, "y2D")
-x, y = ncread(file_rsl_ref, "xc"), ncread(file_rsl_ref, "yc")
 time_rsl = ncread(file_rsl_ref, "time")
 nt_rsl = length(time_rsl)
 
@@ -461,8 +471,6 @@ for i in eachindex(basins)
         color = visc_colors[i]; slines_opts...)
 end
 
-x1, x2, y1, y2 = -700, -100, 700, 1500
-bbox = (x1 .< X .< x2) .&& (y1 .< Y .< y2)
 f_grnd_ref = ncslice(file_rsl_ref, "f_grnd", nt_rsl)
 grline_ref = get_grline(f_grnd_ref) .& bbox
 
@@ -522,15 +530,15 @@ else
 end
 
 axs[1, 1].xticklabelsvisible = false
-axs[1, 1].ylabel = "RSL at reference (m)"
+axs[1, 1].ylabel = "Mean relative SL over mask (m)"
 axs[2, 1].ylabel = L"$V_\mathrm{AIS}$ (m SLE)"
 xlims!(axs[1, 1], (0, 30))
 xlims!(axs[2, 1], (0, 30))
 Legend(fig2[0, 1:2], axs[1, 2], nbanks = 6)
 rowsize!(fig2.layout, 0, 10)
 
-text!(axs[1, 1], 27, 280, text="(1)")
-text!(axs[2, 1], 27, 56, text="(2)")
-text!(axs[1, 2], 0.85, 7.8, text="(3)")
-text!(axs[2, 2], 0.85, 0.08, text="(4)")
-save(plotsdir("16km/rtip/rsl-new.png"), fig2)
+text!(axs[1, 1], 27, 300, text="a", font=:bold)
+text!(axs[2, 1], 27, 55, text="b", font=:bold)
+text!(axs[1, 2], 0.95, 7.6, text="c", font=:bold)
+text!(axs[2, 2], 0.95, 0.05, text="d", font=:bold)
+save(plotsdir("16km/rtip/rsl-$region.png"), fig2)

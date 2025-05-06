@@ -51,10 +51,10 @@ for i in 1:ncols
 end
 Legend(fig[2, 2:3], axs[1], valign = :top, nbanks = 2, fontsize = 26)
 
-axs[1].title = L"(1) Lithospheric thickness $\,$"
-axs[2].title = L"(2) Lowest effective viscosity ($-2 \, σ$)"
-axs[3].title = L"(3) Nominal effective viscosity $\,$"
-axs[4].title = L"(4) Highest effective viscosity ($+2 \, σ$)"
+axs[1].title = L"\textbf{a} \quad Lithospheric thickness $\,$"
+axs[2].title = L"\textbf{b} \quad Lowest effective viscosity ($-2 \, σ$)"
+axs[3].title = L"\textbf{c} \quad Nominal effective viscosity $\,$"
+axs[4].title = L"\textbf{d} \quad Highest effective viscosity ($+2 \, σ$)"
 rowgap!(fig.layout, 1)
 rowsize!(fig.layout, 2, 20)
 save(plotsdir("16km/solidearth.png"), fig)
