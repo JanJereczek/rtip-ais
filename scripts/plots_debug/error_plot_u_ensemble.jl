@@ -67,12 +67,12 @@ function plot_error_u(fn, hash, dx, target_dir)
         ticks = (-3:3, latexify.([-1000, -100, -10, 0, 10, 100, 1000])); diff_cmap...)
 
     px, py = -2900, 2600
-    text!(axs[1, 1], px, py, text = L"\textbf{(1)}", color = :white, fontsize = fs + fs_off)
-    text!(axs[1, 2], px, py, text = L"\textbf{(2)}", color = :white, fontsize = fs + fs_off)
-    text!(axs[2, 1], -0.9, 3.18, text = L"\textbf{(3)}", color = :gray5, fontsize = fs + fs_off)
+    text!(axs[1, 1], px, py, text = L"\textbf{a}", color = :white, fontsize = fs + fs_off)
+    text!(axs[1, 2], px, py, text = L"\textbf{b}", color = :white, fontsize = fs + fs_off)
+    text!(axs[2, 1], -0.9, 3.18, text = L"\textbf{c}", color = :gray5, fontsize = fs + fs_off)
     text!(axs[2, 1], 1.0, -0.8, color = :gray5, fontsize = fs + fs_off,
         text = L"RMSE = %$(round(rmse; digits = 2)) $\mathrm{m \, yr^{-1}}$")
-    text!(axs[2, 2], px, py, text = L"\textbf{(4)}", color = :gray5, fontsize = fs + fs_off)
+    text!(axs[2, 2], px, py, text = L"\textbf{d}", color = :gray5, fontsize = fs + fs_off)
     rowgap!(fig.layout, 1, 10)
     rowgap!(fig.layout, 2, 5)
     rowgap!(fig.layout, 3, -50)

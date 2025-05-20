@@ -49,7 +49,7 @@ end
 
 function load_ssps(scale; wrt = :pd)
     hist = readdlm(datadir("processed/SSP/History.csv"), ',')
-    ssp1 = readdlm(datadir("processed/SSP/SSP1.csv"), ',')
+    ssp1 = readdlm(datadir("processed/SSP/SSP2-34.csv"), ',')
     ssp2 = readdlm(datadir("processed/SSP/SSP2.csv"), ',')
     ssp3 = readdlm(datadir("processed/SSP/SSP3.csv"), ',')
     ssp5 = readdlm(datadir("processed/SSP/SSP5.csv"), ',')

@@ -72,12 +72,12 @@ function plot_error_z(fn, hash, dx, target_dir)
         nbanks = 1, valign = :bottom)
 
     xt, yt = -2900, 2600
-    text!(axs[1, 1], xt, yt, text = L"\textbf{(1)}", fontsize = fs + fs_off, color = :white)
-    text!(axs[1, 2], xt, yt, text = L"\textbf{(2)}", fontsize = fs + fs_off, color = :white)
-    text!(axs[2, 1], 100, 3900, text = L"\textbf{(3)}", fontsize = fs + fs_off, color = :gray5)
+    text!(axs[1, 1], xt, yt, text = L"\textbf{a}", fontsize = fs + fs_off, color = :white)
+    text!(axs[1, 2], xt, yt, text = L"\textbf{b}", fontsize = fs + fs_off, color = :white)
+    text!(axs[2, 1], 100, 3900, text = L"\textbf{c}", fontsize = fs + fs_off, color = :gray5)
     text!(axs[2, 1], 2000, 100.0, color = :gray5, fontsize = fs + fs_off,
         text = L"RMSE = %$(round(rmse; digits = 2)) $\mathrm{m}$")
-    text!(axs[2, 2], xt, yt, text = L"\textbf{(4)}", fontsize = fs + fs_off, color = :gray5)
+    text!(axs[2, 2], xt, yt, text = L"\textbf{d}", fontsize = fs + fs_off, color = :gray5)
     xlims!(axs[2, 1], -0.1, 4200)
     ylims!(axs[2, 1], -0.1, 4200)
     lines!(axs[2, 1], -1000:1000:5000, -1000:1000:5000, color = :green,
