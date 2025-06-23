@@ -54,11 +54,11 @@ function load_ssps(scale; wrt = :pd)
     ssp3 = readdlm(datadir("processed/SSP/SSP3.csv"), ',')
     ssp5 = readdlm(datadir("processed/SSP/SSP5.csv"), ',')
     if wrt == :pd
-        f2014 = hist[end, 2]
-        view(ssp1, :, 2) .-= f2014
-        view(ssp2, :, 2) .-= f2014
-        view(ssp3, :, 2) .-= f2014
-        view(ssp5, :, 2) .-= f2014
+        f2015 = hist[end, 2]
+        view(ssp1, :, 2) .-= f2015
+        view(ssp2, :, 2) .-= f2015
+        view(ssp3, :, 2) .-= f2015
+        view(ssp5, :, 2) .-= f2015
     elseif wrt == :pi
         nothing
     else
@@ -70,6 +70,15 @@ function load_ssps(scale; wrt = :pd)
     view(ssp3, :, 2) .*= scale
     view(ssp5, :, 2) .*= scale
     return ssp1, ssp2, ssp3, ssp5
+end
+
+function shade_transitions!(axs, shade, offset, alpha, color)
+    for i in eachindex(shade)
+        sshade = (shade[i][1]:0.01:shade[i][2]) .+ offset
+        for ax in axs
+            vlines!(ax, sshade, alpha = alpha, color = color)
+        end
+    end
 end
 
 # struct StichedData1D{T}

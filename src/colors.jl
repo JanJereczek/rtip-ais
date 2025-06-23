@@ -22,6 +22,23 @@ z_sl_map = cgrad(:BrBg)
 smb_map = cgrad(:PuOr, [6/8])
 T_shlf_map = cgrad(:jet)
 
+xpcolors = Dict(
+    "REF" => :steelblue1,
+    "EQL" => :black,
+    "OCN" => :royalblue,
+    "HOW" => :royalblue3,
+    "ATM" => 3,
+    "UPL" => :orange,
+    "DPR" => 4,
+    "G20E" => :gray30,
+    "G20R" => :gray60,
+    "H94" => :gray80,
+    "SSP1-2.6" => :gray80,
+    "SSP2-4.5" => :gray60,
+    "SSP3-7.0" => :gray40,
+    "SSP5-8.5" => :gray20,
+)
+
 cmaps = Dict(
     "z_srf" => (colormap = z_srf_map, colorrange = (1e-1, 4e3),
         lowclip = :transparent, highclip = :white),

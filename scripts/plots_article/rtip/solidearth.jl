@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 
 fn_m2 = datadir("output/ais/ramps/16km/steps-sigmarange/0/fastisostasy.nc")
 fn_m1 = datadir("output/ais/ramps/16km/steps-sigmarange/1/fastisostasy.nc")

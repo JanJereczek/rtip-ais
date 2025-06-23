@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 
 T = Float32
 polar_amplification = 1.8
@@ -27,21 +27,6 @@ i_bif = [findlast(f .<= f_bif[i]) for i in 1:n_tra] .+ 2
 t_bif = [t1D[i_bif[i]] for i in 1:n_tra]
 t_end = t_bif .+ dt_grz .* n_grz
 
-# xl = [
-#     (-2000, -1000),
-#     (700, 1400),
-#     (-500, 500),
-#     (400, 1400),
-#     (1300, 2500)
-# ]
-# yl = [
-#     (-600, 400),
-#     (-2300, -1600),
-#     (900, 1900),
-#     (-1700, -700),
-#     (-1100, 100),
-# ]
-
 xl = [
     (-1900, -900),
     (700, 1400),
@@ -67,7 +52,7 @@ mask_vals = sort(unique(img))
 mask_order = [2, 4, 5, 3, 6]
 mask_transects = rotr90(img)
 transect_begin = [:left, :bottom, :left, :bottom, :right]
-region_labels = ["ASE", "WSB 1", "RSB", "WSB 2", "ASB"]
+region_labels = ["ASE", "low-lat. WSB", "RSB", "high-lat. WSB", "ASB"]
 
 set_theme!(theme_latexfonts())
 fs = 20
@@ -77,6 +62,7 @@ fig = Figure(size = (2100 / 2, 2900 / 2), fontsize = fs)
 axs_ts = [Axis(fig[i, 1], aspect = AxisAspect(0.85)) for i in 2:n_tra+1]
 axs_hm = [Axis(fig[i, 2], aspect = AxisAspect(1)) for i in 2:n_tra+1]
 axs_tr = [Axis(fig[i, 3:4], aspect = AxisAspect(2)) for i in 2:n_tra+1]
+# catjet = cgrad([:gray20, :gray100], range(0, stop = 1, length = n_grz+1), categorical = true)
 catjet = cgrad(:jet, range(0, stop = 1, length = n_grz+1), categorical = true)
 tsjet = cgrad(:jet)
 extract_idx(idx) = Tuple(idx.I)
@@ -106,20 +92,20 @@ for i in eachindex(i_bif)
     k = argmin(abs.(t .- t2D))
     heatmap!(axs_hm[i], x, y, ncslice(file2D, "z_bed", k); cmaps["z_bed6"]...)
         grz_steps = range(k, step = di_grz[i], length = n_grz)
-    vlines!(axs_ts[i], t2D[grz_steps] ./ 1f3, color = [(c, 0.8) for c in catjet],
-        linewidth = 1)
+    vlines!(axs_ts[i], t2D[grz_steps] ./ 1f3, color = [(c, 0.3) for c in catjet],
+        linewidth = 6)
     hlines!(axs_ts[i], 0, color = :black, linewidth = lw1, linestyle = :dash)
-    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].bmb, linewidth = lw1,
+    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].bmb, linewidth = lw2,
         label = "basal")
-    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].smb, linewidth = lw1,
+    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].smb, linewidth = lw2,
         label = "surface")
-    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].cmb, linewidth = lw1,
-        label = "calving", color = :gray70)
+    # lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].cmb, linewidth = lw2,
+    #     label = "calving", color = :gray70)
     lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].mb_net,
         color = :gray30,
         label = "net",
         # color = mbs[i].time, colormap = tsjet,
-        linewidth = lw1)
+        linewidth = lw2)
 
     tr_mask = mask_transects .== mask_vals[mask_order[i]]
     ordered_idx, rt = indices_from_mask(tr_mask, X, Y, transect_begin[i])
@@ -187,4 +173,5 @@ rowsize!(fig.layout, 1, 10)
 colgap!(fig.layout, 5)
 rowgap!(fig.layout, -15)
 rowgap!(fig.layout, 1, -5)
-save(plotsdir("16km/hysteresis/transects.png"), fig)
+save(plotsdir("16km/hysteresis/fig2.png"), fig)
+save(plotsdir("16km/hysteresis/fig2.pdf"), fig)

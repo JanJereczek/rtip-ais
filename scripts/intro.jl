@@ -7,10 +7,12 @@ using DelimitedFiles
 using Glob
 using Interpolations
 using LazyGrids
+using Loess
 using NCDatasets
 using NetCDF
 using Random
 using Statistics
+using StatsBase
 using FileIO
 
 # Here you may include files from the source directory

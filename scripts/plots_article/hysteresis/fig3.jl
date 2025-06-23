@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 
 T = Float32
 visc_type = "normvisc"    # "equil" or "aqef"
@@ -19,9 +19,14 @@ xp_labels = [
     nothing,
     "REF",
 ]
-lw1, lw2 = 3, 5
+lw1, lw2 = 3, 6
 lws = [lw1, lw1, lw2, lw2]
-cycling_colors = [1, 3, :steelblue1, :steelblue1]
+cycling_colors = [
+    xpcolors["DPR"],
+    xpcolors["UPL"],
+    xpcolors["REF"],
+    xpcolors["REF"],
+]
 
 ############################################################################
 # The retreat comparison
@@ -29,7 +34,7 @@ cycling_colors = [1, 3, :steelblue1, :steelblue1]
 
 polar_amplification = 1.8
 f_to = 0.25
-f2014 = 1.2
+f2015 = 1.2
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xp_idx = aqef.n_xps
 f_ref = aqef.f[end] ./ polar_amplification
@@ -41,21 +46,18 @@ aratio = (381 - 2*cropx) / (381 - 2*cropy)
 set_theme!(theme_latexfonts())
 ms1, ms2 = 8, 18
 nrows, ncols = 3, 4
-forcing_frames = permutedims(reshape([nothing, 7.6, 7.2, 6.8, 3.8, 3, 2.2, 1.8, 1.6, 1, 0.2, -2], ncols, nrows))
-state_labels = string.(reshape(1:12, ncols, nrows)')
-shade = [(7.45, 7.55), (6.85, 6.95), (3.7, 3.8), (4.1, 4.2) .- f2014, (2.05, 2.15), (1.7, 1.8), (1.3, 1.4), (0.1, 0.2)]
+forcing_frames = permutedims(reshape([nothing, 7.6, 7.2, 6.8, 3.8, 3, 2.2, 1.8, 1.6, 1, 0.2, -2],
+    ncols, nrows))
+state_labels = ["a" "b" "c" "d";
+    "e" "f" "g" "h";
+    "i" "j" "k" "l"]
+shade = [(1.3, 1.4), (2.6, 2.7), (2.9, 3.0), (3.25, 3.35),
+    (3.6, 3.7), (4.1, 4.2), (4.8, 4.9), (8.05, 8.15), (8.65, 8.75)]
 
 fig = Figure(size=(1400, 1050), fontsize = 24)
 axs = [Axis(fig[i+1, j], aspect = AxisAspect(aratio)) for i in 1:nrows, j in 1:ncols]
-for i in eachindex(shade)
-    sshade = (shade[i][1]:0.01:shade[i][2]) .+ f2014
-    if i == 1
-        vlines!(axs[1, 1], sshade, alpha = 0.2,
-        color = :gray70, label = "Bifurcation")
-    else
-        vlines!(axs[1, 1], sshade, alpha = 0.2, color = :gray70)
-    end
-end
+shade_transitions!([axs[1, 1]], shade, 0.0, 0.2, :gray70)
+vlines!(axs[1, 1], 1f6, color = dgray, linewidth = 5, alpha = 0.6, label = "Bifurcation")
 
 axs[1, 1].xticks = -2:2:12
 axs[1, 1].xminorticks = -2:0.2:12
@@ -85,17 +87,17 @@ YY = Y[ii, jj]
 
 text_offsets = permutedims(reshape([
     nothing,         # 1
-    (-25, -10),         # 2
-    (10, -12),      # 3
-    (-25, -25),     # 4
-    (-15, -40),       # 5
-    (-25, -30),       # 6
-    (-25, -20),     # 7
-    (-25, -20),       # 8
+    (-25, -5),         # 2
+    (0, -35),      # 3
+    (-27, -3),     # 4
+    (-10, -35),       # 5
+    (-9, -37),       # 6
+    (-8, -35),     # 7
+    (10, -15),       # 8
     (10, -15),       # 9
-    (10, -15),     # 10
-    (-15, -40),       # 11
-    (10, 0),       # 12
+    (-27, 0),     # 10
+    (-5, -37),       # 11
+    (-10, 0),       # 12
 ], ncols, nrows))
 
 xlims_frames = permutedims(reshape([nothing, (500, 1500), (500, 1500),
@@ -138,8 +140,8 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
         end
         @show i3, f_eq, V_eq
 
-        scatter!(axs[1, 1], f_eq .+ f2014, V_eq, color = :red, markersize = ms2)
-        text!(axs[1, 1], f_eq .+ f2014, V_eq, text = state_labels[i, j],
+        scatter!(axs[1, 1], f_eq .+ f2015, V_eq, color = :red, markersize = ms2)
+        text!(axs[1, 1], f_eq .+ f2015, V_eq, text = state_labels[i, j],
             color = :red, font = :bold, fontsize = 30, offset = text_offsets[i, j])
 
         hidedecorations!(axs[i, j])
@@ -152,7 +154,7 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
                 (ylims_frames[i, j][1] .< Y .< ylims_frames[i, j][2]), levels = [0.5],
                 color = :darkred, linewidth = 3)
         end
-        text!(axs[i, j], -2500, -2500, color = :white, font = :bold,
+        text!(axs[i, j], -2500, -2450, color = :white, font = :bold,
             text="("*state_labels[i, j]*")", fontsize = 30)
         xlims!(axs[i, j], extrema(XX))
         ylims!(axs[i, j], extrema(YY))
@@ -162,22 +164,22 @@ s = 200
 alpha = 1
 for k in 1:aqef.n_xps
     if k < aqef.n_xps
-        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2014,
+        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
             aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]), alpha = alpha)
     else
-        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2014,
+        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2015,
             aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]), alpha = alpha)
     end
 end
 
-# f2014 = 1.12
-scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2014, eql.V_sle;
+# f2015 = 1.12
+scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2015, eql.V_sle;
     color = :black, label = "EQL", markersize = ms1)
 
-text!(axs[1, 1], 9, 2, font = :bold, text = "(1)", color = :black, fontsize = 30)
-axislegend(axs[1, 1], position = :rt, nbanks = 1)
+text!(axs[1, 1], 1, 1, font = :bold, text = "(a)", color = :black, fontsize = 30)
+axislegend(axs[1, 1], position = :lt, nbanks = 1)
 relwidth = 0.8
 Colorbar(fig[1, 2], vertical = false, width = Relative(relwidth), valign = 2,
     label = L"Bed elevation $z_b$ (km)", ticks = latexifyticks(-6:2:2, 1f3); cmaps["z_bed2"]...)
@@ -188,6 +190,7 @@ elem_1 = LineElement(color = :red, linewidth = 2)
 elem_2 = LineElement(color = :darkred, linewidth = 2)
 Legend(fig[1, 4], [elem_1, elem_2], ["Grounding line", "Highlighted region"])
 
+axs[1, 1].xreversed = true
 rowsize_base = 300
 rowgap!(fig.layout, 5)
 colgap!(fig.layout, 5)
@@ -200,5 +203,6 @@ colsize!(fig.layout, 1, rowsize_base*aratio)
 colsize!(fig.layout, 2, rowsize_base*aratio)
 colsize!(fig.layout, 3, rowsize_base*aratio)
 colsize!(fig.layout, 4, rowsize_base*aratio)
-save(plotsdir("16km/hysteresis/regrowth.png"), fig)
-save(plotsdir("16km/hysteresis/regrowth.pdf"), fig)
+fig
+save(plotsdir("16km/hysteresis/fig3.png"), fig)
+save(plotsdir("16km/hysteresis/fig3.pdf"), fig)

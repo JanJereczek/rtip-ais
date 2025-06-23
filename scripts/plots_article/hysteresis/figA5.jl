@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 file_t0 = datadir("output/ais/hyster/16km/retreat/aqef/"*
     "pmpt-normvisc-normforcing-withrestarts/0/yelmo2D.nc")
 file_t0_hr = datadir("BedMachineAntarctica-v3.nc")

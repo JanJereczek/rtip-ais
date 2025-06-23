@@ -150,7 +150,7 @@ function plot_simple_transect(ax, z_bed, f_grnd, H_ice, z_sl, ii, jj, rr)
 
     band!(ax, rr, z_bed_cross, z_sl_cross, color = :royalblue, label = L"Ocean $\,$")
     # band!(ax, rr, zzloclip, zzhiclip, color = :skyblue1, label = L"Grounded ice $\,$")
-    band!(ax, rr, zzloclip, zzhiclip, color = :gray70, label = L"Grounded ice $\,$")
+    band!(ax, rr, zzloclip, zzhiclip, color = :gray80, label = L"Grounded ice $\,$")
     band!(ax, rr, zshelfbottom, zshelftop, color = :lightskyblue1, label = L"Floating ice $\,$")
     # lines!(ax, rr, zz, color = :deepskyblue1, linewidth = 3)
     lines!(ax, rr, zz, color = :gray50, linewidth = 3)

@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 
 mutable struct HeatmapRtip{T}
     visc_cases::Vector{String}

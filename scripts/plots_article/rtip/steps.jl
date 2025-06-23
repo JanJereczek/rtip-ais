@@ -1,4 +1,4 @@
-include("../intro.jl")
+include("../../intro.jl")
 
 f_to = 0.25
 polar_amplification = 1.8
