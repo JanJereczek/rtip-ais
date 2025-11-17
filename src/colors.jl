@@ -23,10 +23,12 @@ smb_map = cgrad(:PuOr, [6/8])
 T_shlf_map = cgrad(:jet)
 
 xpcolors = Dict(
+    "REFm2" => :red,
     "REF" => :steelblue1,
+    "REFp2" => :dodgerblue,
     "EQL" => :black,
     "OCN" => :royalblue,
-    "HOW" => :royalblue3,
+    "HOW" => :navy,
     "ATM" => 3,
     "UPL" => :orange,
     "DPR" => 4,

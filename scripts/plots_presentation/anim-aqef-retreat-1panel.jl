@@ -1,10 +1,9 @@
 include("../intro.jl")
 
-visc_type = "lowvisc"
-dir = datadir("output/ais/hyster/16km/retreat/aqef/pmpt-$visc_type-normforcing-withrestarts/0")
+dir = datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow/0")
 
 file1D = "$dir/yelmo1D.nc"
-file2D = "$dir/yelmo2Dsm.nc"
+file2D = "$dir/yelmo2D.nc"
 
 nx, ny = size(ncread(file2D, "x2D"))
 X2D, Y2D = ncread(file2D, "x2D"), ncread(file2D, "y2D")
@@ -12,6 +11,7 @@ X2D, Y2D = ncread(file2D, "x2D"), ncread(file2D, "y2D")
 tol = 1e-8
 f_to = 0.25
 f_pa = 1.8
+f2015 = 1.2
 
 time_1D = ncread(file1D, "time")
 dt_1D = time_1D[2] - time_1D[1]
@@ -43,7 +43,7 @@ uxy_s_obs = @lift(log10.(uxy_s[:, :, $k] .+ tol))
 lin_uxy_s_obs = @lift(uxy_s[:, :, $k])
 time_1D_obs = @lift(time_1D[1:$k_1D] ./ 1e3)
 hyst_f_now_obs = @lift(hyst_f_now[1:$k_1D] .* f_to)
-hyst_f_now_scalar_obs = @lift("GMT anomaly = $(round(1.2 + (hyst_f_now[$k_1D] ./ f_pa),
+hyst_f_now_scalar_obs = @lift("GMT anomaly = $(round(f2015 + (hyst_f_now[$k_1D] ./ f_pa),
     digits = 3)) K")
 
 set_theme!(theme_latexfonts())
@@ -77,6 +77,6 @@ colgap!(fig.layout, 5)
 text!(ax, 20, 80, text = hyst_f_now_scalar_obs, color = :white, fontsize = fs, font = :bold)
 fig
 
-record(fig, plotsdir("16km/retreat-aqef-minimal.mp4"), 1:n_2D-40, framerate = 10) do i
+record(fig, plotsdir("v2/retreat-aqef.mp4"), 1:1100, framerate = 16) do i
     k[] = i
 end

@@ -1,9 +1,9 @@
 include("../intro.jl")
 
 dx = 16
-ncdir = datadir("output/ais/spinup/$(dx)km/corrected-hydro")
+ncdir = datadir("output/ais/v2/spinup/$(dx)km/minvisc")
 filepaths = recursive_global(ncdir, "yelmo2D.nc", 5)
-target_dir = plotsdir("$(dx)km/errormap_ensemble/")
+target_dir = plotsdir("v2/$(dx)km/errormap_ensemble")
 
 function plot_error_z(fn, hash, dx, target_dir)
 

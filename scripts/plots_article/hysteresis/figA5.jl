@@ -93,5 +93,5 @@ Legend(fig[nrows+1, 2:3], [elem_1], [L"$z_b = 58 \, \mathrm{m}$ isoline"], valig
 
 rowgap!(fig.layout, 10)
 colgap!(fig.layout, 10)
-save(plotsdir("16km/bedrock/bedmachine3.png"), fig)
-save(plotsdir("16km/bedrock/bedmachine3.pdf"), fig)
+save(plotsdir("16km/bedrock/figA5.png"), fig)
+save(plotsdir("16km/bedrock/figA5.pdf"), fig)

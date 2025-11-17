@@ -1,4 +1,4 @@
-include("../../intro.jl")
+include("../../../intro.jl")
 
 mutable struct HeatmapRtip{T}
     visc_cases::Vector{String}
@@ -9,6 +9,7 @@ mutable struct HeatmapRtip{T}
     t_end::Vector{Vector{T}}
     paths::Vector{Vector{String}}
 end
+
 function HeatmapRtip{T}(visc_cases::Vector{String}) where T
     n_visc_cases = length(visc_cases)
     f = [ T[] for _ in 1:n_visc_cases ]
@@ -32,6 +33,7 @@ function aggregate_xp!(hr::HeatmapRtip, dir::String)
 
     for j in 1:n_files
         file = joinpath(dir, "$(params[j + 1, i_dirs])", "yelmo1D.nc")
+        # @show file
         visc_case = params[j + 1, i_visc_case]
 
         if visc_case == "stddev"
@@ -60,30 +62,17 @@ function aggregate_xp!(hr::HeatmapRtip, dir::String)
     end
 end
 
+plot_highlight_scatter = false
 visc_cases = ["m2stddev", "m1stddev", "nominal", "p1stddev", "p2stddev"]
 visc_labels = [L"$-2 \, \sigma$", L"$-1 \, \sigma$", "nominal", L"$+1 \, \sigma$", L"$+2 \, \sigma$"]
 visc_num_labels = [L"$\textbf{e} \quad -2 \, \sigma$", L"$\textbf{f} \quad -1 \, \sigma$", L"\textbf{g} \quad nominal $\,$",
     L"$\textbf{h} \quad +1 \, \sigma$", L"$\textbf{i} \quad +2 \, \sigma$"]
 hr = HeatmapRtip{Float32}(visc_cases)
-
-region = "recovery"
-if region == "recovery"
-    dirs = [
-        datadir("output/ais/ramps/16km/ramps-recovery-sigmarange"),
-        datadir("output/ais/ramps/16km/ramps-recovery-sigmarange-extlow"),
-        datadir("output/ais/ramps/16km/ramps-recovery-sigmarange-long"),
-    ]
-elseif region == "wais"
-    dirs = [
-        datadir("output/ais/ramps/16km/ramps-sigmarange"),
-    ]
-end
-
+dirs = [datadir("output/ais/v2/ramps/wais/$i") for i in 1:10]
 for dir in dirs
     aggregate_xp!(hr, dir)
 end
 @show [length(f) for f in hr.f]
-
 
 # Compute SSP slopes
 f_pd = 1.2
@@ -103,27 +92,15 @@ dfdt_max = 10 ^ ceil(log10(dfdt_max)) # Let's take some margin
 
 # Compute values related to 2D maps
 k = 3
-if region == "recovery"
-    i1, i2 = 110, 190
-    d1, d2 = 130, 115
-    f_hm = [10.2, 10.4]
-    dfdt_hm = [1e-3, 3e-3]
-    f_hm_jet = collect(10.0:0.2:11.2)
-    dfdt_hm_jet = [3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1]
-    f_bif = 10.7
-    cmap = (colormap = cgrad([:lightcoral, :white, :cornflowerblue]), colorrange = (31, 36),
-        lowclip = :lightcoral, highclip = :cornflowerblue)
-elseif region == "wais"
-    i1, i2 = 60, 105
-    d1, d2 = 130, 115
-    f_hm = [2.0, 2.2]
-    dfdt_hm = [1e-2, 3e-2]
-    f_hm_jet = collect(1.4:0.2:2.6)
-    dfdt_hm_jet = [3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1]
-    f_bif = 2.1
-    cmap = (colormap = cgrad([:lightcoral, :white, :cornflowerblue]), colorrange = (53, 57),
-        lowclip = :lightcoral, highclip = :cornflowerblue)
-end
+i1, i2 = 60, 105
+d1, d2 = 130, 115
+f_hm = [2.0, 2.2]
+dfdt_hm = [1e-2, 3e-2]
+f_hm_jet = collect(1.4:0.2:2.6)
+dfdt_hm_jet = [3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1]
+f_bif = 2.0
+cmap = (colormap = cgrad([:lightcoral, :white, :cornflowerblue]), colorrange = (53, 57),
+    lowclip = :lightcoral, highclip = :cornflowerblue)
 
 idx = [argmin( abs.(hr.f[k] .- f_hm[i]) + abs.(hr.dfdt[k] .- dfdt_hm[i]) ) for i in 1:2]
 idx_jet = [argmin( abs.(hr.f[k] .- f_hm_jet[i]) + abs.(hr.dfdt[k] .- dfdt_hm_jet[i]) )
@@ -168,33 +145,25 @@ ax_vol.xminorticks = 0:5:60
 ax_ramp2.yticklabelsvisible = false
 ax_ramp2.yticksvisible = false
 
-if region == "recovery"
-    ylims!(ax_ramp1, (-0.1, 6.8) .+ f_pd)
-    ylims!(ax_ramp2, (-0.1, 6.8) .+ f_pd)
-    ax_ramp1.yticks = 1:2:7
-    ax_vol.xticks = 0:20:60
-    ax_vol.xminorticksvisible = true
-    xlims!(ax_vol, (0, 45))
-elseif region == "wais"
-    ylims!(ax_ramp1, (-0.1, 1.6) .+ f_pd)
-    ylims!(ax_ramp2, (-0.1, 1.6) .+ f_pd)
-    ax_ramp1.yticks = 1:0.5:3
-    ax_vol.xticks = 0:10:30
-    ax_vol.yticks = 0:2:60
-    xlims!(ax_vol, (0, 30))
-end
+ylims!(ax_ramp1, (-0.1, 1.6) .+ f_pd)
+ylims!(ax_ramp2, (-0.1, 1.6) .+ f_pd)
+ax_ramp1.yticks = 1:0.5:3
+ax_vol.xticks = 0:10:30
+ax_vol.yticks = 0:2:60
+xlims!(ax_vol, (0, 30))
 
 ax_hm = [Axis(fig[2, 2], aspect = DataAspect()), Axis(fig[2, 3], aspect = DataAspect())]
 axs = [Axis(ha[1, j], aspect = AxisAspect(1)) for j in 1:hr.n_visc_cases]
 
-logxticks = (-4:2:0, [L"10^{%$n} $\,$" for n in -4:2:0])
+logxticks = (-6:2:0, [L"10^{%$n} $\,$" for n in -6:2:0])
 axs[1].ylabel = L"Max GMT anomaly, $f^\mathrm{max}$ (K)"
 axs[hr.n_visc_cases].yaxisposition = :right
 rsl_index = argmin( (hr.f[1] .- 10.2).^2 .+ (hr.dfdt[1] .- 3e-2).^2 )
-file_rsl_ref = joinpath(hr.paths[1][rsl_index], "yelmo2D.nc")
+rsl_index = 1
+file_rsl_ref = joinpath(hr.paths[1][rsl_index], "yelmo2Dsm.nc")
 X, Y = ncread(file_rsl_ref, "x2D"), ncread(file_rsl_ref, "y2D")
 x, y = ncread(file_rsl_ref, "xc"), ncread(file_rsl_ref, "yc")
-x1, x2, y1, y2 = -500, -100, 900, 1400
+x1, x2, y1, y2 = -1700, -1100, -600, 0
 bbox = (x1 .< X .< x2) .&& (y1 .< Y .< y2)
 
 visc_colors = cgrad(:jet, range(0, stop = 1, length = hr.n_visc_cases + 1), categorical = true,
@@ -207,34 +176,20 @@ for j in eachindex(hr.visc_cases)
         heatmap!(axs[j], log10.(hr.dfdt[j] ./ pa), hr.f[j] ./ pa .+ f_pd, hr.V[j]; cmap...)
         scatter!(axs[j], log10.(hr.dfdt[j] ./ pa), hr.f[j] ./ pa .+ f_pd, markersize = ms1,
             color = :white)
-        if region == "recovery"
-            scatter!(axs[j], log10.(hr.dfdt[j][rsl_index] ./ pa),
-                hr.f[j][rsl_index] ./ pa .+ f_pd,
-                markersize = ms2, color = visc_colors[j], marker = viscmarker)
-        end
-        hlines!(axs[j], [f_bif ./ pa .+ f_pd], color = :gray10, linestyle = :dash, linewidth = 4)
+        hlines!(axs[j], [f_bif], color = :gray10, linestyle = :dash, linewidth = 4)
     end
     vlines!(axs[j], log10.([dfdt_min, dfdt_max]), color = :gray20, linewidth = 3)
 
     axs[j].title = visc_num_labels[j]
     # j in (1,3,5) ? axs[j].xlabel = L"$\mathrm{log}_{10}$ slope (K)" : nothing
     j == 3 ? axs[j].xlabel = L"$\mathrm{log}_{10}$ rate of GMT anomaly, $\dot{f}$ $(\mathrm{K} \, \mathrm{yr}^{-1})$" : nothing
-    axs[j].xticks = -4:1:0
-    axs[j].xminorticks = -4:0.5:0
+    axs[j].xticks = -6:1:0
+    axs[j].xminorticks = -6:0.5:0
     axs[j].xminorticksvisible = true
-    if region == "recovery"
-        axs[j].yticks = 5.2:0.2:6.8 .+ f_pd
-    elseif region == "wais"
-        axs[j].yticks = 0.6:0.2:1.4 .+ f_pd
-    end
+    axs[j].yticks = 0.6:0.2:1.4 .+ f_pd
 
-    if region == "recovery"
-        ylims!(axs[j], (9.3 ./ pa, 11.5 ./ pa) .+ f_pd)
-        xlims!(axs[j], (log10(0.0003 ./ pa)-0.25, log10(0.3 ./ pa)+0.25))
-    elseif region == "wais"
-        ylims!(axs[j], (1.3 ./ pa, 2.7 ./ pa) .+ f_pd)
-        xlims!(axs[j], (log10(3f-5 ./ pa)+0.25, log10(1 ./ pa)-0.15))
-    end
+    ylims!(axs[j], extrema(hr.f[1]) ./ pa .+ f_pd .+ (-0.05, 0.05))
+    xlims!(axs[j], log10.(extrema(hr.dfdt[1] ./ pa)) .+ (-0.25, 0.25))
 
     if 1 < j # < hr.n_visc_cases
         axs[j].yticksvisible = false
@@ -244,9 +199,11 @@ end
 
 
 for i in eachindex(f_hm_jet)
-    scatter!(axs[k], log10.(hr.dfdt[k][idx_jet[i]] ./ pa),
-        hr.f[k][idx_jet[i]] ./ pa .+ f_pd,
-        markersize = ms2, color = jetmap[i])
+    if plot_highlight_scatter
+        scatter!(axs[k], log10.(hr.dfdt[k][idx_jet[i]] ./ pa),
+            hr.f[k][idx_jet[i]] ./ pa .+ f_pd,
+            markersize = ms2, color = jetmap[i])
+    end
     file1D = joinpath(hr.paths[k][idx_jet[i]], "yelmo1D.nc")
     lines!(ax_ramp1, ncread(file1D, "time") ./ 1e3,
         ncread(file1D, "hyst_f_now") ./ pa .+ f_pd,
@@ -260,13 +217,13 @@ for i in eachindex(f_hm_jet)
 end
 
 # The inset axis
-X = ncread(joinpath(hr.paths[k][1], "yelmo2D.nc"), "x2D")
+X = ncread(joinpath(hr.paths[k][1], "yelmo2Dsm.nc"), "x2D")
 nx, ny = size(X)
 XX, YY = ndgrid(1:nx, 1:ny)
 dcrop = 10
 ii = dcrop+1:nx-dcrop
 jj = dcrop+1:ny-dcrop
-valign_inset = region == "recovery" ? 0.15 : 0.85
+valign_inset = 0.85
 inset_axs = [
     Axis(fig[2, i],
     # aspect = DataAspect(),
@@ -280,23 +237,25 @@ inset_axs = [
 for i in eachindex(f_hm)
     
     hidedecorations!(ax_hm[i])
-    file = joinpath(hr.paths[k][idx[i]], "yelmo2D.nc")
+    file = joinpath(hr.paths[k][idx[i]], "yelmo2Dsm.nc")
     time = ncread(file, "time")
     nt = length(time)
     H_ice_ref = ncread(file, "H_ice", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
     H_ice = ncread(file, "H_ice", start = [i1, i2, nt], count = [d1, d2, 1])[:, :, 1]
     z_bed = ncread(file, "z_bed", start = [i1, i2, nt], count = [d1, d2, 1])[:, :, 1]
-    f_grnd_ref = ncread(file, "f_grnd", start = [i1, i2, 1], count = [d1, d2, 1])[:, :, 1]
-    f_grnd = ncread(file, "f_grnd", start = [i1, i2, nt], count = [d1, d2, 1])[:, :, 1]
-    f_grnd_ref_glob = ncread(file, "f_grnd", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
+    # f_grnd_ref = ncread(file, "f_grnd", start = [i1, i2, 1], count = [d1, d2, 1])[:, :, 1]
+    # f_grnd = ncread(file, "f_grnd", start = [i1, i2, nt], count = [d1, d2, 1])[:, :, 1]
+    # f_grnd_ref_glob = ncread(file, "f_grnd", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
     heatmap!(ax_hm[i], z_bed; cmaps["z_bed"]...)
     heatmap!(ax_hm[i], H_ice + z_bed; cmaps["z_srf"]...)
 
-    scatter!(axs[k], log10.(hr.dfdt[k][idx[i]] ./ pa), hr.f[k][idx[i]] ./ pa .+ f_pd,
-        markersize = ms2, color = framecolors[i])
+    if plot_highlight_scatter
+        scatter!(axs[k], log10.(hr.dfdt[k][idx[i]] ./ pa), hr.f[k][idx[i]] ./ pa .+ f_pd,
+            markersize = ms2, color = framecolors[i])
+    end
     file1D = joinpath(hr.paths[k][idx[i]], "yelmo1D.nc")
-    contour!(ax_hm[i], f_grnd_ref, color = :black, linewidth = 2, levels = [0.5])
-    contour!(ax_hm[i], f_grnd, color = :red, linewidth = 2, levels = [0.5])
+    # contour!(ax_hm[i], f_grnd_ref, color = :black, linewidth = 2, levels = [0.5])
+    # contour!(ax_hm[i], f_grnd, color = :red, linewidth = 2, levels = [0.5])
     lines!(ax_ramp1, ncread(file1D, "time") ./ 1e3,
         ncread(file1D, "hyst_f_now") ./ pa .+ f_pd,
         color = framecolors[i], linewidth = lw)
@@ -307,7 +266,7 @@ for i in eachindex(f_hm)
         color = framecolors[i], linewidth = lw)
     heatmap!(inset_axs[i], H_ice_ref .> 1e-8, colorrange = (1e-8, 1),
         colormap = cgrad([:white, :gray70]), lowclip = :white, highclip = :gray70)
-    contour!(inset_axs[i], f_grnd_ref_glob, color = :black, linewidth = 2, levels = [0.5])
+    # contour!(inset_axs[i], f_grnd_ref_glob, color = :black, linewidth = 2, levels = [0.5])
     contour!(inset_axs[i], ((i1 .<= XX .<= i1+d1) .&& (i2 .<= YY .<= i2+d2)),
         color = :black, linewidth = 2)
     xlims!(inset_axs[i], 10, 371)
@@ -323,22 +282,12 @@ for i in eachindex(f_hm)
 end
 
 contour!(ax_hm[1], bbox[i1:i1+d1, i2:i2+d2], color = :darkorange, levels = [0.5], linewidth = 3)
-
-if region == "recovery"
-    text!(ax_ramp2, 35, 5 ./ pa .+ f_pd, text = "a", color = :black, font = :bold)
-    text!(ax_vol, 37, 53, text = "b", color = :black, font = :bold)
-    text!(ax_hm[1], 2, 102, text = "c", color = :white, font = :bold)
-    text!(ax_hm[2], 2, 102, text = "d", color = :white, font = :bold)
-    text!(ax_hm[1], 8, 103, text = "t=45 kyr", color = :white)
-    text!(ax_hm[2], 8, 103, text = "t=45 kyr", color = :white)
-elseif region == "wais"
-    text!(ax_ramp1, 2.0, 1.1 ./ pa .+ f_pd, text = "a", color = :black, font = :bold)
-    text!(ax_vol, 27, 57, text = "b", color = :black, font = :bold)
-    text!(ax_hm[1], 2, 2, text = "c", color = :white, font = :bold)
-    text!(ax_hm[2], 2, 2, text = "d", color = :white, font = :bold)
-    text!(ax_hm[1], 8, 3, text = "t=30 kyr", color = :white)
-    text!(ax_hm[2], 8, 3, text = "t=30 kyr", color = :white)
-end
+text!(ax_ramp1, 2.0, 1.1 ./ pa .+ f_pd, text = "a", color = :black, font = :bold)
+text!(ax_vol, 27, 57, text = "b", color = :black, font = :bold)
+text!(ax_hm[1], 2, 2, text = "c", color = :white, font = :bold)
+text!(ax_hm[2], 2, 2, text = "d", color = :white, font = :bold)
+text!(ax_hm[1], 8, 3, text = "t=30 kyr", color = :white)
+text!(ax_hm[2], 8, 3, text = "t=30 kyr", color = :white)
 
 Colorbar(fig[1, 2], label = "Bed elevation (km)", vertical = false,
     width = Relative(rw_cbar), flipaxis = true, ticks = latexifyticks(-6:2:4, 1e3),
@@ -361,16 +310,8 @@ rowgap!(fig.layout, 1, -65)
 rowgap!(fig.layout, 2, -30)
 rowsize!(fig.layout, 2, 400)
 
-# colgap!(fig.layout, 10)
-# rowgap!(fig.layout, 10)
-
-# rowgap!(fig.layout, 1, -60)
-# rowgap!(fig.layout, 2, -40)
-# rowgap!(fig.layout, 3, -30)
-# rowsize!(fig.layout, 1, 10)
-
-save(plotsdir("16km/rtip/ramp-heatmap-$region.png"), fig)
-save(plotsdir("16km/rtip/ramp-heatmap-$region.pdf"), fig)
+save(plotsdir("v2/rtip/ramp-heatmap-wais-ext-$(plot_highlight_scatter).png"), fig)
+save(plotsdir("v2/rtip/ramp-heatmap-wais-ext-$(plot_highlight_scatter).pdf"), fig)
 
 
 #####################################################################################
@@ -477,7 +418,7 @@ sort!(sr)
 basins = ["WAIS", "WSB low lat", "RSB", "WSB high lat", "ASB"]
 # f_bif = [1.25, 4.3, 6.0, 7.11, 7.89]
 # f_bif = [1.3, 4.4, 6.0, 7.11, 7.89]
-f_bif_eq = [2.5, 5.6, 7.2, 8.3, 9.1]
+f_bif_eq = [2.1, 5.6, 7.2, 8.3, 9.1]
 f_bif_qeq = [2.45, 5.9, 7.3, 8.35, 9.15]
 f_bif = f_bif_eq
 V_bif = [55.5, 47.5, 34.5, 23.5, 13.5]
@@ -521,7 +462,12 @@ for i in eachindex(basins)
         color = visc_colors[i]; slines_opts...)
 end
 
-f_grnd_ref = ncslice(file_rsl_ref, "f_grnd", nt_rsl)
+if region == "wais"
+    f_grnd_ref = ncslice(file_rsl_ref, "f_grnd", 1)
+else
+    f_grnd_ref = ncslice(file_rsl_ref, "f_grnd", nt_rsl)
+end
+
 grline_ref = get_grline(f_grnd_ref) .& bbox
 
 for i in eachindex(visc_cases)
@@ -601,5 +547,5 @@ axs[1, 2].xticksvisible = false
 rowgap!(fig2.layout, 5)
 rowgap!(fig2.layout, 1, 10)
 colgap!(fig2.layout, 5)
-save(plotsdir("16km/rtip/rsl-$region.png"), fig2)
-save(plotsdir("16km/rtip/rsl-$region.pdf"), fig2)
+save(plotsdir("16km/rtip/rsl-wais.png"), fig2)
+save(plotsdir("16km/rtip/rsl-wais.pdf"), fig2)
