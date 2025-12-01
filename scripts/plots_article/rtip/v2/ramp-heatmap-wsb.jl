@@ -80,7 +80,7 @@ visc_labels = [L"$-2 \, \sigma$", L"$-1 \, \sigma$", "nominal", L"$+1 \, \sigma$
 visc_num_labels = [L"$\textbf{e} \quad -2 \, \sigma$", L"$\textbf{f} \quad -1 \, \sigma$", L"\textbf{g} \quad nominal $\,$",
     L"$\textbf{h} \quad +1 \, \sigma$", L"$\textbf{i} \quad +2 \, \sigma$"]
 hr = HeatmapRtip{Float32}(visc_cases)
-dirs = [datadir("output/ais/v2/ramps/rsb/$i") for i in vcat(1:5, 7:7, 9:9)]
+dirs = [datadir("output/ais/v2/ramps/wsb/$i") for i in 1:9]
 for dir in dirs
     aggregate_xp!(hr, dir)
 end
@@ -105,14 +105,14 @@ dfdt_max = 10 ^ ceil(log10(dfdt_max)) # Let's take some margin
 
 # Compute values related to 2D maps
 k = 3
-i1, i2 = 110, 190
-d1, d2 = 130, 115
+i1, i2 = 200, 45
+d1, d2 = 100, 90
 rtime_hm_jet = get_rtime_idx(unique(hr.rtime[k]))
-f_hm_jet = unique(hr.f[k])[length(rtime_hm_jet)+2:-1:3]
-f_hm = f_hm_jet[4:5]
-rtime_hm = rtime_hm_jet[4:5]
-f_bif = 7.0
-cmap = (colormap = cgrad([:lightcoral, :white, :cornflowerblue]), colorrange = (29, 33),
+f_hm_jet = unique(hr.f[k])[length(rtime_hm_jet):-1:1]
+f_hm = f_hm_jet[2:3]
+rtime_hm = rtime_hm_jet[2:3]
+f_bif = 6.0
+cmap = (colormap = cgrad([:lightcoral, :white, :cornflowerblue]), colorrange = (39, 45),
     lowclip = :lightcoral, highclip = :cornflowerblue)
 rtime_k = get_rtime_idx(hr.rtime[k])
 idx = [argmin( abs.(hr.f[k] .- f_hm[i]) + abs.(rtime_k .- rtime_hm[i]) ) for i in 1:2]
@@ -158,12 +158,12 @@ ax_vol.xminorticks = 0:5:60
 ax_ramp2.yticklabelsvisible = false
 ax_ramp2.yticksvisible = false
 
-ylims!(ax_ramp1, (-0.1, 6.8) .+ f_pd)
-ylims!(ax_ramp2, (-0.1, 6.8) .+ f_pd)
+ylims!(ax_ramp1, (-0.1, f_bif + 0.3))
+ylims!(ax_ramp2, (-0.1, f_bif + 0.3))
 ax_ramp1.yticks = 1:2:7
 ax_vol.xticks = 0:20:60
 ax_vol.xminorticksvisible = true
-xlims!(ax_vol, (0, 45))
+xlims!(ax_vol, (0, 39))
 ax_hm = [Axis(fig[2, 2], aspect = DataAspect()), Axis(fig[2, 3], aspect = DataAspect())]
 axs = [Axis(ha[1, j], aspect = AxisAspect(1)) for j in 1:hr.n_visc_cases]
 
@@ -174,7 +174,7 @@ rsl_index = 1
 file_rsl_ref = joinpath(hr.paths[1][rsl_index], "yelmo2Dsm.nc")
 X, Y = ncread(file_rsl_ref, "x2D"), ncread(file_rsl_ref, "y2D")
 x, y = ncread(file_rsl_ref, "xc"), ncread(file_rsl_ref, "yc")
-x1, x2, y1, y2 = -500, -100, 900, 1400
+x1, x2, y1, y2 = 500, 1500, -2200, -1500
 bbox = (x1 .< X .< x2) .&& (y1 .< Y .< y2)
 
 visc_colors = cgrad(:jet, range(0, stop = 1, length = hr.n_visc_cases + 1), categorical = true,
@@ -185,7 +185,6 @@ for j in eachindex(hr.visc_cases)
     
     if length(hr.f[j]) > 1
         hrtime_idx = get_rtime_idx(hr.rtime[j])
-        # @show hrtime_idx hr.f[j]
         heatmap!(axs[j], hrtime_idx, hr.f[j] ./ pa .+ f_pd, hr.V[j]; cmap...)
         scatter!(axs[j], hrtime_idx, hr.f[j] ./ pa .+ f_pd, markersize = ms1,
             color = :white)
@@ -198,7 +197,7 @@ for j in eachindex(hr.visc_cases)
     axs[j].title = visc_num_labels[j]
     axs[j].xlabel = L"Ramp length $t_r$ (yr)"
     axs[j].xticks = (rtime_hm_jet,
-        reverse(["8e5", "4e5", "1e5", "1e4", "1e3", "1e2", "1e1"]))
+        reverse(["8e5", "6e5","4e5", "2e5", "1e5", "1e4", "1e3", "1e2", "1e1"]))
     axs[j].xticklabelrotation = π / 2
     ylims!(axs[j], extrema(hr.f[1]) ./ pa .+ f_pd .+ (-0.05, 0.05))
 
@@ -233,7 +232,7 @@ XX, YY = ndgrid(1:nx, 1:ny)
 dcrop = 10
 ii = dcrop+1:nx-dcrop
 jj = dcrop+1:ny-dcrop
-valign_inset = 0.15
+valign_inset = 0.9
 inset_axs = [
     Axis(fig[2, i],
     # aspect = DataAspect(),
@@ -256,9 +255,8 @@ for i in eachindex(f_hm)
     # f_grnd_ref = ncread(file, "f_grnd", start = [i1, i2, 1], count = [d1, d2, 1])[:, :, 1]
     # f_grnd = ncread(file, "f_grnd", start = [i1, i2, nt], count = [d1, d2, 1])[:, :, 1]
     # f_grnd_ref_glob = ncread(file, "f_grnd", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
-    ii = i == 1 ? 2 : 1
-    heatmap!(ax_hm[ii], z_bed; cmaps["z_bed"]...)
-    heatmap!(ax_hm[ii], H_ice + z_bed; cmaps["z_srf"]...)
+    heatmap!(ax_hm[i], z_bed; cmaps["z_bed"]...)
+    heatmap!(ax_hm[i], H_ice + z_bed; cmaps["z_srf"]...)
 
     if plot_highlight_scatter
         scatter!(axs[k], rtime_hm[i], hr.f[k][idx[i]] ./ pa .+ f_pd,
@@ -285,21 +283,21 @@ for i in eachindex(f_hm)
     # text!(inset_axs[i], 10, 5, font = :bold, color = :black, fontsize = fs-4,
     #     text = "t=0 kyr")
         #text = "t = $(Int(round(time[nt] / 1e3, digits = 0))) kyr")
-    ax_hm[ii].leftspinecolor = framecolors[i]
-    ax_hm[ii].rightspinecolor = framecolors[i]
-    ax_hm[ii].topspinecolor = framecolors[i]
-    ax_hm[ii].bottomspinecolor = framecolors[i]
-    ax_hm[ii].spinewidth = 5
+    ax_hm[i].leftspinecolor = framecolors[i]
+    ax_hm[i].rightspinecolor = framecolors[i]
+    ax_hm[i].topspinecolor = framecolors[i]
+    ax_hm[i].bottomspinecolor = framecolors[i]
+    ax_hm[i].spinewidth = 5
 end
 
 contour!(ax_hm[1], bbox[i1:i1+d1, i2:i2+d2], color = :darkorange, levels = [0.5], linewidth = 3)
 
-text!(ax_ramp2, 35, 5 ./ pa .+ f_pd, text = "a", color = :black, font = :bold)
-text!(ax_vol, 37, 53, text = "b", color = :black, font = :bold)
-text!(ax_hm[1], 2, 102, text = "c", color = :white, font = :bold)
-text!(ax_hm[2], 2, 102, text = "d", color = :white, font = :bold)
-text!(ax_hm[1], 8, 103, text = "t=45 kyr", color = :white)
-text!(ax_hm[2], 8, 103, text = "t=45 kyr", color = :white)
+text!(ax_ramp1, 1, 0.1, text = "a", color = :black, font = :bold)
+text!(ax_vol, 2, 38, text = "b", color = :black, font = :bold)
+text!(ax_hm[1], 2, 2, text = "c", color = :white, font = :bold)
+text!(ax_hm[2], 2, 2, text = "d", color = :white, font = :bold)
+text!(ax_hm[1], 8, 2, text = "t=45 kyr", color = :white, font = :bold)
+text!(ax_hm[2], 8, 2, text = "t=45 kyr", color = :white, font = :bold)
 
 
 Colorbar(fig[1, 2], label = "Bed elevation (km)", vertical = false,
@@ -322,9 +320,10 @@ colsize!(fig.layout, 1, 200)
 rowgap!(fig.layout, 1, -65)
 rowgap!(fig.layout, 2, -30)
 rowsize!(fig.layout, 2, 400)
+fig
 
-save(plotsdir("v2/rtip/ramp-heatmap-rsb-ext-$(plot_highlight_scatter).png"), fig)
-save(plotsdir("v2/rtip/ramp-heatmap-rsb-ext-$(plot_highlight_scatter).pdf"), fig)
+save(plotsdir("v2/rtip/ramp-heatmap-wsb-ext-$(plot_highlight_scatter).png"), fig)
+save(plotsdir("v2/rtip/ramp-heatmap-wsb-ext-$(plot_highlight_scatter).pdf"), fig)
 
 
 #####################################################################################
