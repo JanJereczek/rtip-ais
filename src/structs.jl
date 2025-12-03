@@ -4,6 +4,7 @@ struct AQEFResults{T<:AbstractFloat}
     t_1D::Vector{Vector{T}}
     f::Vector{Vector{T}}
     V_sle::Vector{Vector{T}}
+    A_ice::Vector{Vector{T}}
     t_2D::Vector{Vector{T}}
 end
 
@@ -13,20 +14,21 @@ function AQEFResults(T, xps::Vector{String})
     t_1D = Vector{Vector{T}}(undef, n_xps)
     f = Vector{Vector{T}}(undef, n_xps)
     V_sle = Vector{Vector{T}}(undef, n_xps)
-
+    A_ice = Vector{Vector{T}}(undef, n_xps)
     t_2D = Vector{Vector{T}}(undef, n_xps)
 
 
     for (i, xp) in enumerate(xps)
         xpdir = joinpath([xp, "0"])
 
+        @show xpdir
         t_1D[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "time")
         f[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "hyst_f_now")
         V_sle[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "V_sle")
-
+        A_ice[i] = ncread(joinpath(xpdir, "yelmo1D.nc"), "A_ice")
         t_2D[i] = ncread(joinpath(xpdir, "yelmo2D.nc"), "time")
     end
-    AQEFResults(xps, n_xps, t_1D, f, V_sle, t_2D)
+    AQEFResults(xps, n_xps, t_1D, f, V_sle, A_ice, t_2D)
 end
 
 struct MaskedMassbalance{T}

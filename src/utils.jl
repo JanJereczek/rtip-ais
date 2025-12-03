@@ -26,7 +26,7 @@ function load_netcdf(file, vars::Vector{String}, stride::Int)
 end
 
 function load_netcdf_2D(file, vars::Vector{String}, index)
-    return [ncread(file, var)[:, :, index] for var in vars]
+    return [ncread(file, var, start = [1, 1, index], count = [-1, -1, 1])[:, :, 1] for var in vars]
 end
 
 function recursive_global(dir, pattern, level)

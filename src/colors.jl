@@ -24,7 +24,7 @@ T_shlf_map = cgrad(:jet)
 
 xpcolors = Dict(
     "REFm2" => :red,
-    "REF" => :steelblue1,
+    "REF" => :gray10,
     "REFp2" => :dodgerblue,
     "EQL" => :black,
     "OCN" => :royalblue,

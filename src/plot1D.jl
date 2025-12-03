@@ -15,3 +15,18 @@ function plot_lines(xp, path_to_folder; stride = 1)
     end
     close(ds)
 end
+
+function rectangle!(ax, p0, w, h)
+    poly!(
+        ax,
+        Point2f[
+            (p0[1], p0[2]),
+            (p0[1] + w, p0[2]),
+            (p0[1] + w, p0[2] + h),
+            (p0[1], p0[2] + h),
+        ],
+        color = :white,
+        strokecolor = :black,
+        strokewidth = 1,
+    )
+end
