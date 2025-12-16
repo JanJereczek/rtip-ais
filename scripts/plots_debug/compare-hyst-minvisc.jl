@@ -29,10 +29,8 @@ xp_labels = [
 ]
 aqef = AQEFResults(T, xps)
 
-# eqldir1 = datadir("output/ais/hyster/16km/retreat/equil/pmpt-normvisc-normforcing")
-# eql1 = EquilResults(T, eqldir1)
-# eqldir2 = datadir("output/ais/hyster/16km/regrowth/equil")
-# eql2 = EquilResults(T, eqldir2)
+eqldir = datadir("output/ais/v2/hyster/retreat/equil/refnomslow")
+eql = EquilResults(T, eqldir)
 
 lw1, lw2, lw3 = 5, 5, 7
 ms1, ms2 = 15, 20
@@ -145,6 +143,8 @@ for k in 1:aqef.n_xps
         color = lcolor(cycling_colors[k]),
     )
 end
+scatter!(ax1, eql.f ./ polar_amplification .+ f2015, eql.V_sle;
+    color = :black, label = "EQL", markersize = ms1)
 
 # for k in [1, 2, 7, 8, 9]
 #     if k < aqef.n_xps

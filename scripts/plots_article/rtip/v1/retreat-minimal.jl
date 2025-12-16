@@ -20,25 +20,6 @@ fn_ref = "/p/projects/megarun/ice_data/Antarctica/ANT-16KM/ANT-16KM_TOPO-RTOPO-2
 mask_ref = ncread(fn_ref, "mask")
 mask_ref[250:300, 150:200] .= 2
 
-function smooth_grline!(mask)
-    for I in CartesianIndices(mask)
-        i, j = Tuple(I)
-        if 1 < i < 380 && 1 < j < 380 &&
-            mask[i+1, j] == 2 &&
-            mask[i+1, j+1] == 2 &&
-            mask[i+1, j-1] == 2 &&
-            mask[i+1, j+1] == 2 &&
-            mask[i+1, j-1] == 2 &&
-            mask[i-1, j] == 2 &&
-            mask[i-1, j+1] == 2 &&
-            mask[i-1, j-1] == 2
-
-            mask[i, j] = 2
-
-        end
-    end
-end
-
 for i in 1:3
     smooth_grline!(mask_ref)
 end

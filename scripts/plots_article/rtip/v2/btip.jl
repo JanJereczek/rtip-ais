@@ -93,7 +93,7 @@ ax3 = Axis(fig[2, 1], aspect = DataAspect()) #AxisAspect(aratio)
 # Ax1
 #####################################
 f_gmt_bif = [1.98, 5.87, 7.1, 8.0, 8.65]
-shade = [(1.9, 2.0), (5.85, 5.95), (6.9, 7.1), (8.6, 8.7)]
+shade = [(1.9, 2.0), (5.85, 5.95), (6.8, 7.1), (8.6, 8.7)]
 for i in eachindex(shade)
     vlines!(ax1, (shade[i][1]:0.01:shade[i][2]), alpha = 0.2, color = :gray70)
 end
@@ -114,7 +114,7 @@ for k in 1:aqef.n_xps
         color = cycling_colors[k],
     )
 end
-text!(axs[1, 1], 11.2, 55, text = "a", color = :grey10, fontsize = 30, font = :bold)
+text!(ax1, 11.2, 55, text = "a", color = :grey10, fontsize = 30, font = :bold)
 ax1.xticks = 0:2:12
 ax1.xminorticks = 0:0.2:12
 ax1.yticks = 0:10:60
