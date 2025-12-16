@@ -2,6 +2,8 @@ latexify(s) = L"%$s $\,$"
 latexifyticks(x) = (x, latexify.(x))
 latexifyticks(x, scale) = (x .* scale, latexify.(x))
 
+not(x) = !x
+
 function get_files(dir)
     file1D = joinpath(dir, "yelmo1D.nc")
     file1Dwais = joinpath(dir, "yelmo1D_WAIS.nc")
@@ -81,6 +83,52 @@ function shade_transitions!(axs, shade, offset, alpha, color)
     end
 end
 
+
+function smooth_grline!(mask)
+    for I in CartesianIndices(mask)
+        i, j = Tuple(I)
+        if 1 < i < 380 && 1 < j < 380 &&
+            mask[i+1, j] == 2 &&
+            mask[i+1, j+1] == 2 &&
+            mask[i+1, j-1] == 2 &&
+            mask[i+1, j+1] == 2 &&
+            mask[i+1, j-1] == 2 &&
+            mask[i-1, j] == 2 &&
+            mask[i-1, j+1] == 2 &&
+            mask[i-1, j-1] == 2
+
+            mask[i, j] = 2
+
+        end
+    end
+end
+
+function filter_outliers(V_sle; mode = :low)
+    V_sle_filtered = copy(V_sle)
+    for i in eachindex(V_sle)[2:end-1]
+        if mode == :low
+            condition = V_sle[i] > V_sle[i-1] && V_sle[i] > V_sle[i+1]
+        elseif mode == :high
+            condition = V_sle[i] < V_sle[i-1] && V_sle[i] < V_sle[i+1]
+        elseif mode == :mixed
+            condition = (V_sle[i] > V_sle[i-1] && V_sle[i] > V_sle[i+1]) ||
+                        (V_sle[i] < V_sle[i-1] && V_sle[i] < V_sle[i+1])
+        end
+
+        if condition
+            println("Filtering outlier at index $i: ", V_sle[i])
+            V_sle_filtered[i] = (V_sle[i-1] + V_sle[i+1]) / 2
+        else
+            V_sle_filtered[i] = V_sle[i]
+        end
+    end
+    return V_sle_filtered
+end
+
+ncslice(file, var, idx) = dropdims(
+    ncread(file, var, start = [1, 1, idx], count = [-1, -1, 1]), dims = 3)
+
+
 # struct StichedData1D{T}
 #     files::Vector{String}
 #     t_vecs::Vector{Vector{T}}
@@ -119,7 +167,3 @@ end
 #     return dropdims(ncread(sd.files[file_idx], var, start = [1, 1, time_idx],
 #         count = [-1, -1, 1]), dims = 3)
 # end
-
-
-ncslice(file, var, idx) = dropdims(
-    ncread(file, var, start = [1, 1, idx], count = [-1, -1, 1]), dims = 3)
