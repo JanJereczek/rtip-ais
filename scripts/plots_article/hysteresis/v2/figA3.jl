@@ -1,9 +1,9 @@
-include("../../intro.jl")
+include("../../../intro.jl")
 
 dx = 16
-ncdir = datadir("output/ais/spinup/$(dx)km/corrected-hydro")
+ncdir = datadir("output/ais/v2/spinup/16km/minvisc/3")
 filepaths = recursive_global(ncdir, "yelmo2D.nc", 5)
-target_dir = plotsdir("$(dx)km/hysteresis/")
+target_dir = plotsdir("v2/hysteresis/")
 
 function plot_error_u(fn, hash, dx, target_dir)
 
@@ -39,6 +39,7 @@ function plot_error_u(fn, hash, dx, target_dir)
         11, categorical = true, rev = true),
         lowclip = :darkblue, highclip = :darkred, colorrange = (-3, 3))
 
+    uxy_s_ref[uxy_s_ref .== 0] .= NaN
     heatmap!(axs[1, 1], xc, yc, view(z_bed_ref, :, :, 1); cmaps["z_bed"]...)
     heatmap!(axs[1, 1], X[mask_ref], Y[mask_ref],
         log10.(view(uxy_s_ref, mask_ref, 1) .+ tol); cmaps["uxy_s"]...)

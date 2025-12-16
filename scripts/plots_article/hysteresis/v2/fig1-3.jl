@@ -19,7 +19,6 @@ eqldir = datadir("output/ais/v2/hyster/retreat/equil/refnomslow")
 eql = EquilResults(T, eqldir)
 lws = [5, 5, 5, 10]
 cycling_colors = [xpcolors[l] for l in xp_labels]
-cycling_colors[end] = :gray10
 
 ############################################################################
 # The retreat comparison
@@ -79,7 +78,7 @@ bifurcation_data = [
     ("Aurora", 7.4, 35),
     ("Pensacola-Pole", 15.0, 11),
     ("Gamburtsev-Transantarctic", 27.1, 28),
-    ("Gamburtsev-Dronning Maud", 28.1, 28),
+    ("Gamburtsev-Queen Maud", 28.1, 28),
 ]
 x_text = sort(vcat(large_misi, small_misi, perimeter))
 for i in eachindex(bifurcation_data)
@@ -92,15 +91,19 @@ for k in 1:aqef.n_xps
         linewidth = lws[k], label = xp_labels[k], color = lcolor(cycling_colors[k]))
 end
 
-scatter!(ax, eql.f ./ polar_amplification .+ f2015, eql.V_sle;
-    color = xpcolors["REF"], label = "EQL", markersize = ms1)
+idx = sortperm(eql.f)
+f = eql.f[idx]
+V_sle = eql.V_sle[idx]
+V_sle = filter_outliers(V_sle)
+scatter!(ax, f ./ polar_amplification .+ f2015, V_sle;
+    color = xpcolors["EQL"], label = "EQL", markersize = ms1)
 
 axislegend(ax, position = :lb, nbanks = 1)
 
-ax.xticks = 0:2:12
+ax.xticks = 0:1:10
 ax.xminorticks = 0:0.2:12
 ax.yticks = 0:10:60
-ax.yminorticks = IntervalsBetween(10)
+ax.yminorticks = IntervalsBetween(5)
 ax.xminorgridvisible = true
 ax.yminorgridvisible = true
 ax.xlabel = L"GMT anomaly $f$ (K)"
@@ -120,30 +123,35 @@ YY = Y[ii, jj]
 
 regions = [
     ("WAIS", (-1300, -300), 0, :black),
-    ("EAIS", (900, -500), 0, :black),
-    ("APIS", (-2200, 1300), -π/5, :black),
+    ("EAIS", (900, -900), 0, :black),
+    ("Peninsula", (-2400, 1500), -π/5, :black),
 ]
 subregions = [
     ("Amundsen", (-1600, -100), -π/3, :white),
     ("Ross", (-200, -1100), 0, :white),
     ("Filchner- \n Ronne", (-1400, 400), 0, :white),
-    ("Wilkes", (700, -1750), 0, :black),
-    ("Recovery", (-450, 1100), 0, :black),
-    ("Aurora", (1600, -1000), 0, :black),
-    ("Gamburtsev", (500, 300), 0, :black),
-    ("Amery", (1400, 600), 0, :white),
+    ("Wilkes \n Basin", (700, -1950), 0, :black),
+    ("Recovery \n Basin", (-450, 1000), 0, :black),
+    ("Aurora \n Basin", (1700, -900), 0, :black),
+    ("Vostok Lake", (900, -300), 0, :black),
+    ("Gamburtsev", (500, 100), 0, :black),
+    ("Amery \n Basin", (1000, 500), 0, :black),
     ("Transantarctic", (100, -300), -π/3, :black),
-    ("Dronning Maud", (0, 1500), 0, :black),
-    ("Pensacola-Pole", (-600, 400), -π/5, :black),
+    ("Queen Maud Land", (-100, 1500), 0, :black),
+    ("Kemp \n Land", (1500, 1000), 0, :black),
+    ("Pensacola-Pole \n Basin", (-650, 400), -π/5, :black),
 ]
-region_fontsize = 30
-subregion_fontsize = 22
+region_fontsize = 28
+subregion_fontsize = 20
 
 
 hidedecorations!(axmap)
 heatmap!(axmap, xc, yc, z_bed; cmaps["z_bed2"]...)
 heatmap!(axmap, xc, yc, z_srf .* f_ice, alpha = alpha; cmaps["z_srf"]...)
 contour!(axmap, xc, yc, f_grnd .+ f_ice, levels = [1.9], color = :red, linewidth = 2)
+for i in 1:3
+    smooth_grline!(mask_ref)
+end
 contour!(axmap, xc, yc, mask_ref .== 2, levels = [0.5],
     color = :orange, linewidth = 2)
 xlims!(axmap, extrema(XX))
@@ -330,7 +338,7 @@ tr_color = :black   # :magenta
 
 for i in eachindex(i_bif)
 
-    axs_ts[i].ylabel = "Mean MB (m/yr)"
+    axs_ts[i].ylabel = "Regional mass balance (m/yr)"
 
     hideydecorations!(axs_hm[i])
     axs_hm[i].xticksvisible = false

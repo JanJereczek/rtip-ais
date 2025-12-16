@@ -8,7 +8,7 @@ xps = [
     "$regrowth_dir/aqef/refnomslow",
 ]
 aqef = AQEFResults(T, xps)
-# eql = EquilResults(T, "$regrowth_dir/equil")
+eql = EquilResults(T, "$regrowth_dir/equil/refnomslow")
 
 xp_labels = [
     "DPR",
@@ -38,7 +38,7 @@ aratio = (381 - 2*cropx) / (381 - 2*cropy)
 
 set_theme!(theme_latexfonts())
 ms1, ms2 = 8, 18
-fig4 = Figure(size=(800, 600), fontsize = 24)
+fig4 = Figure(size=(800, 800), fontsize = 24)
 ax = Axis(fig4[1, 1])
 ax.xticks = -2:1:12
 ax.xminorticks = -2:0.2:12
@@ -49,23 +49,23 @@ ax.yminorgridvisible = true
 ax.xlabel = L"GMT anomaly $f$ (K)"
 ax.ylabel = L"AIS volume $V_\mathrm{af}$ (m SLE)"
 ylims!(ax, 0, 60)
-xlims!(ax, 1, 11)
+xlims!(ax, 0, 10)
 
 bifs = [
-    (9.0, "East Gamburtsev", 30, 15.5),
-    (8.657, "Gamburtsev-Droning Maud", 8, 24),
-    (8.462, "Gamburtsev-Transantarctic", 33, 24),
-    (8.153, "Droning Maud", 12, 13),
-    (6.457, "Recovery-Gamburtsev-Aurora", 15, 25.7),
-    (4.853, "Transantarctic", 20, 13),
-    (3.8, "Pensacola-Pole, Amery & Recovery", 27, 30),
-    # (3.738, "Recovery & Amery", 50, 30),
-    (3.21, "Recovery", 12, 8.5),
-    (2.836, "Pensacola-Pole", 40, 13.2),
-    (2.658, "Aurora", 17, 6.8),
-    (2.573, "Aurora-Wilkes", 45, 13),
-    (2.424, "Wilkes", 25, 6.5),
-    (1.174, "Wilkes", 30, 6.5),
+    (9.0, "East Gamburtsev", 5, 19),
+    (8.657, "Gamburtsev-Queen Maud", 8, 27),
+    # (8.462, "Gamburtsev-Transantarctic", 33, 24),
+    (8.153, "Queen Maud", 12, 13.8),
+    (6.457, "Recovery-Gamburtsev-Aurora", 16, 31),
+    (4.853, "Transantarctic", 20, 15.5),
+    (3.8, "Pensacola-Pole, Amery & Recovery", 23, 36.5),
+    (3.5, "Vostok", 10, 8),
+    (3.21, "Recovery", 37, 10),
+    (2.836, "Pensacola-Pole", 40, 16),
+    (2.658, "Aurora", 17, 7.8),
+    (2.573, "Aurora-Wilkes", 45, 15.5),
+    (2.424, "Wilkes", 25, 7.5),
+    (1.174, "Wilkes", 30, 7.5),
 ]
 
 f_bif = [bifs[i][1] for i in eachindex(bifs)]
@@ -73,7 +73,7 @@ vlines!(ax, f_bif, color = :gray60, alpha = 0.5, linewidth = 5)
 
 for i in eachindex(bifs)
     rectangle!(ax, (bifs[i][1] - 0.13, bifs[i][3] - 0.4), 0.3, bifs[i][4])
-    text!(ax, bifs[i][1] + 0.15, bifs[i][3], text = bifs[i][2], rotation = π/2, fontsize = 16)
+    text!(ax, bifs[i][1] + 0.15, bifs[i][3], text = bifs[i][2], rotation = π/2, fontsize = 18)
 end
 vlines!(ax, 1f6, alpha = 0.9, color = :gray60, linewidth = 6, label = "Bifurcation")
 
@@ -84,9 +84,17 @@ for k in 1:aqef.n_xps
         aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
         color = lcolor(cycling_colors[k]), alpha = alpha)
 end
-# scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2015, eql.V_sle;
-#     color = :black, label = "EQL", markersize = ms1)
-axislegend(ax, position = :rt)
+
+idx = sortperm(eql.f)
+f = eql.f[idx]
+V_sle = eql.V_sle[idx]
+V_sle = filter_outliers(V_sle, mode = :low)
+scatter!(ax, f ./ polar_amplification .+ f2015, V_sle;
+    color = :cornflowerblue, label = "EQL", markersize = ms1)
+Legend(fig4[0, 1], ax, nbanks = 5, framevisible = false)
+rowsize!(fig4.layout, 0, 20)
+colsize!(fig4.layout, 1, 700)
+# axislegend(ax, position = :ct)
 fig4
 save(plotsdir("v2/hysteresis/fig4.png"), fig4)
 save(plotsdir("v2/hysteresis/fig4.pdf"), fig4)
@@ -99,7 +107,7 @@ save(plotsdir("v2/hysteresis/fig4.pdf"), fig4)
 fig5 = Figure(size=(1600, 1200), fontsize = 24)
 nrows, ncols = 3, 4
 axs = [Axis(fig5[i+1, j], aspect = AxisAspect(aratio)) for i in 1:nrows, j in 1:ncols]
-f_map = f_bif[vcat(2, 4, 7, 8, 10, 12)]
+f_map = f_bif[vcat(2, 3, 6, 8, 10, 12)]
 f_map = vcat(f_map .+ 0.05, f_map .- 0.05)
 sort!(f_map, rev = true)
 forcing_frames = permutedims(reshape(f_map, ncols, nrows))
@@ -119,14 +127,24 @@ jj = cropy+1:ny-cropy
 XX = X[ii, jj]
 YY = Y[ii, jj]
 
-# xlims_frames = permutedims(reshape([nothing, (500, 1500), (500, 1500),
-#     nothing, nothing, nothing, nothing, nothing, nothing,
-#     nothing, nothing, nothing], ncols, nrows))
-
-# ylims_frames = permutedims(reshape([nothing, (300, 1300), (300, 1300),
-#     nothing, nothing, nothing, nothing, nothing, nothing,
-#     nothing, nothing, nothing], ncols, nrows))
-
+xl = [
+    [(400, 1500), (800, 1800)],    # Gamburtsev-Queen Maud
+    [(-300, 500), (1400, 2200)],      # Queen Maud
+    [(-600, 400), (1200, 2000), (-400, 400)],    # Pensacola-Pole
+    [(-600, 500)],    # Recovery
+    [(1200, 2500)],   # Aurora
+    [(500, 1500)],    # Wilkes
+]
+yl = [
+    [(300, 1400), (-400, 400)],    # Gamburtsev-Queen Maud
+    [(1200, 2100), (800, 1800)],   # Queen Maud
+    [(-100, 500), (300, 1100), (1000, 1600)],       # Pensacola-Pole
+    [(400, 1500)],    # Recovery
+    [(-1200, -200)],  # Aurora
+    [(-2000, -800)],  # Wilkes
+]
+x_highlight = permutedims(reshape(repeat(xl, inner = 2), ncols, nrows), (2, 1))
+y_highlight = permutedims(reshape(repeat(yl, inner = 2), ncols, nrows), (2, 1))
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
 for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     forcing = forcing_frames[i, j]
@@ -147,11 +165,13 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     heatmap!(axs[i, j], xc, yc, z_srf .* f_ice; cmaps["z_srf"]...)
     contour!(axs[i, j], xc, yc, f_grnd .+ f_ice, levels = [1.9],
         color = :red, linewidth = 2)
-    # if xlims_frames[i, j] !== nothing
-    #     contour!(axs[i, j], xc, yc, (xlims_frames[i, j][1] .< X .< xlims_frames[i, j][2]) .&
-    #         (ylims_frames[i, j][1] .< Y .< ylims_frames[i, j][2]), levels = [0.5],
-    #         color = :darkred, linewidth = 3)
-    # end
+    for k in eachindex(x_highlight[i, j])
+        xl = x_highlight[i, j][k]
+        yl = y_highlight[i, j][k]
+        contour!(axs[i, j], xc, yc, (xl[1] .< X .< xl[2]) .&
+            (yl[1] .< Y .< yl[2]), levels = [0.5],
+            color = :darkred, linewidth = 3)
+    end
     text!(axs[i, j], -2500, -2450, color = :black, font = :bold,
         text="("*state_labels[i, j]*") f = $(round(forcing, digits=2)) K", fontsize = 24)
     xlims!(axs[i, j], extrema(XX))
@@ -167,7 +187,7 @@ Colorbar(fig5[1, 3:4], vertical = false, width = Relative(relwidth), valign = 2,
     ticks = (vcat([1], 1000:1000:4000), latexify.(0:4)); cmaps["z_srf"]...)
 elem_1 = LineElement(color = :red, linewidth = 2)
 elem_2 = LineElement(color = :darkred, linewidth = 2)
-Legend(fig5[1, 2:3], [elem_1, elem_2], ["Grounding line", "Highlighted region"], valign = :bottom)
+Legend(fig5[1, 2:3], [elem_1, elem_2], ["Grounding line", "Highlighted regions"], valign = :bottom)
 
 rowsize_base = 350
 rowgap!(fig5.layout, 5)

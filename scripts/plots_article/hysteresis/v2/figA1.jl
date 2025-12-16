@@ -1,4 +1,4 @@
-include("../../intro.jl")
+include("../../../intro.jl")
 
 file = datadir("BedMachineAntarctica-v3.nc")
 z_bed = reverse(ncread(file, "bed"), dims = 2)
@@ -30,15 +30,15 @@ f_power = map(u -> friction(u, pl), u_vec)
 f_coulomb = map(u -> friction(u, rcl), u_vec)
 
 set_theme!(theme_latexfonts())
-fig = Figure(size = (1400, 580), fontsize = 22)
-axf = Axis(fig[1, 1], aspect = AxisAspect(1))
+figA1 = Figure(size = (1400, 580), fontsize = 22)
+axf = Axis(figA1[1, 1], aspect = AxisAspect(1))
 axf.xlabel = L"Sliding velocity $u_b$ ($\mathrm{m \, yr^{-1}}$)"
 axf.ylabel = L"Sliding factor $f \left( u_b \right)$ (1)"
 lines!(axf, u_vec, f_power, label = L"$\frac{u}{u_0^q + u^{(1-q)}}$ (Garbe et al., 2020)",
     linewidth = 3)
 lines!(axf, u_vec, f_coulomb, label = L"$\left( \frac{u}{u_0 + u} \right)^q$ (present study)", linewidth = 3)
 axislegend(axf, position = :lt)
-fig
+figA1
 
 ######################################################
 # TPMP
@@ -67,13 +67,13 @@ jj2 = 8000:8150
 # ii3 = 4500:8000
 # jj3 = 3500:7000
 
-axs = [Axis(fig[1, j], aspect = DataAspect()) for j in 2:3]
-inset_axs = [Axis(fig[1, j], aspect = DataAspect(), width=Relative(0.3), height=Relative(0.3),
-    halign=0.0, valign=0.09, backgroundcolor=:white) for j in 2:3]
+axs = [Axis(figA1[1, j], aspect = DataAspect()) for j in 2:3]
+inset_axs = [Axis(figA1[1, j], aspect = DataAspect(), width=Relative(0.3), height=Relative(0.3),
+    halign=0.05, valign=0.09, backgroundcolor=:white) for j in 2:3]
 hidedecorations!.([axs..., inset_axs...])
 function plot_grounding_zone!(ax, inset_ax, zb, haf, ii, jj, iii, jjj, X, Y, lw, lc)
     heatmap!(ax, view(zb, ii, jj); cmaps["z_bed6"]...)
-    contour!(ax, view(haf, ii, jj); levels = [0, 100], color = [:orange, :red],
+    contour!(ax, view(haf, ii, jj); levels = [0, 50], color = [:orange, :red],
         linewidth = 3)
 
     i1 = di
@@ -84,7 +84,7 @@ function plot_grounding_zone!(ax, inset_ax, zb, haf, ii, jj, iii, jjj, X, Y, lw,
     text!(ax, i1-2, j1-10, text = "5 km", color = lc)
 
 
-    heatmap!(inset_ax, view(h, iii, jjj) .> 1e-8, colormap = cgrad([:gray70, :gray95], [0, 1]),
+    heatmap!(inset_ax, view(haf, iii, jjj) .> 1e-8, colormap = cgrad([:gray70, :gray95], [0, 1]),
         colorrange = (0, 1), lowclip = :transparent, highclip = :white)
     contour!(inset_ax, (ii[1] .< X .< ii[end]) .&& (jj[1] .< Y .< jj[end]),
         levels = [0.5], color = :red, linewidth = 3)
@@ -96,20 +96,20 @@ plot_grounding_zone!(axs[2], inset_axs[2], z_bed, h_af, ii2, jj2, iii2, jjj2, X2
 
 elem_1 = LineElement(color = :orange, linewidth = 2)
 elem_2 = LineElement(color = :red, linewidth = 2)
-Legend(fig[2, 2], [elem_1, elem_2], ["Downstream limit", "Upstream limit"],
+Legend(figA1[2, 2], [elem_1, elem_2], ["Downstream limit", "Upstream limit"],
     nbanks = 1, valign = :top)
-Colorbar(fig[2, 3], vertical = false, label = "Bed elevation (km)", flipaxis = false,
+Colorbar(figA1[2, 3], vertical = false, label = "Bed elevation (km)", flipaxis = false,
     width = Relative(0.5), valign = :bottom; cmaps["z_bed6"]...)
 axf.title = "(a) Friction laws comparison"
 axs[1].title = "(b) Thwaites grounding zone"
 axs[2].title = "(c) Amery grounding zone"
 
 base = 400
-colsize!(fig.layout, 1, base)
-colsize!(fig.layout, 2, base)
-colsize!(fig.layout, 3, base)
-rowsize!(fig.layout, 2, 0)
-rowgap!(fig.layout, 1, -60)
-fig
-save(plotsdir("16km/hysteresis/figA1.png"), fig)
-save(plotsdir("16km/hysteresis/figA1.pdf"), fig)
+colsize!(figA1.layout, 1, base)
+colsize!(figA1.layout, 2, base)
+colsize!(figA1.layout, 3, base)
+rowsize!(figA1.layout, 2, 0)
+rowgap!(figA1.layout, 1, -60)
+figA1
+save(plotsdir("v2/hysteresis/figA1.png"), figA1)
+save(plotsdir("v2/hysteresis/figA1.pdf"), figA1)

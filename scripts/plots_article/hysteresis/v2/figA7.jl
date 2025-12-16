@@ -1,12 +1,11 @@
-include("../../intro.jl")
+include("../../../intro.jl")
 
 polar_amplification = 1.8
+f2015 = 1.2
 f_to = 0.25
 
 T = Float32
-visc_type = "lowvisc"
-regrowth_dir = datadir("output/ais/hyster/16km/retreat")
-xp = "$regrowth_dir/aqef/pmpt-$visc_type-normforcing-withrestarts/0"
+xp = datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow/0")
 
 fn1D = "$xp/yelmo1D.nc"
 fn2D = "$xp/yelmo2D.nc"
@@ -18,13 +17,14 @@ X, Y = ncread(fn2D, "x2D"), ncread(fn2D, "y2D")
 data, f_ice, z_bed, z_srf = similar(X), similar(X), similar(X), similar(X)
 nanmask = fill(false, size(X))
 
-k_bif_2D = 330
-t_end_bif = t1D[findfirst(f1D ./ polar_amplification .< 7.5)]
-k_end_bif = argmin(abs.(t2D .- t_end_bif))
+dk = 6
+k_bif_2D = 763
+k_end_bif = k_bif_2D + 2*dk
+t_end_bif = t2D[k_end_bif]
 x1, x2 = 900, 1900
 y1, y2 = -1300, -300
 
-k_snaps = [k_bif_2D, k_bif_2D + 3, k_bif_2D + 6]
+k_snaps = [k_bif_2D, k_bif_2D + dk, k_bif_2D + 2*dk]
 vars = ["taud_acy", "uy_s", "taud_acx", "ux_s", "smb", "visc_eff_int"]
 varlabels = [
     L"Driving stress in $y$",
@@ -57,8 +57,17 @@ scale_opts = [1, 2, 1, 2, 3, 4]
 set_theme!(theme_latexfonts())
 n_snaps, n_vars = length(k_snaps), length(vars)
 nrows, ncols = n_snaps, n_vars
-fig = Figure(size = (1600, 900), fontsize = 22)
-axs = [Axis(fig[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
+figA7 = Figure(size = (1600, 900), fontsize = 22)
+axs = [Axis(figA7[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
+inset_ax = Axis(figA7[1, 1], width = Relative(0.45), height = Relative(0.45),
+    halign = 0.02, valign = 0.98)
+hidedecorations!(inset_ax)
+
+f_ice_1 = ncslice(fn2D, "f_ice", k_snaps[1])
+heatmap!(inset_ax, x, y, f_ice_1;
+    colormap = cgrad([:white, :gray]), colorrange = (0, 1))
+contour!(inset_ax, x, y, x1 .< X .< x2 .&& y1 .< Y .< y2, levels = [0.5],
+    linewidth = 2, color = :red)
 
 for i in 1:nrows
     k = k_snaps[i]
@@ -105,24 +114,24 @@ rw = 0.9
 uticks = [-log10(umax), -log10(umax/100), log10(umax/100), log10(umax)]
 utickvals = Int.([-umax, -umax/100, umax/100, umax])
 uticklabels = string.(utickvals)
-Colorbar(fig[nrows + 1, 1], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, 1], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\tau_{\text{d}, y}$ (kPa)", halign = :center; tauopts...)
-Colorbar(fig[nrows + 1, 2], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, 2], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$u_y$ ($\mathrm{m \, yr^{-1}}$)", halign = :center, ticks = (uticks, uticklabels),
     ; uopts...)
-Colorbar(fig[nrows + 1, 3], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, 3], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\tau_{\text{d}, x}$ (kPa)", halign = :center; tauopts...)
-Colorbar(fig[nrows + 1, 4], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, 4], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$u_x$ ($\mathrm{m \, yr^{-1}}$)", halign = :center, ticks = (uticks, uticklabels),
     ; uopts...)
-Colorbar(fig[nrows + 1, 5], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, 5], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\text{SMB}$ ($\mathrm{m \, yr^{-1}}$)", halign = :center; smbopts...)
-Colorbar(fig[nrows + 1, ncols], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figA7[nrows + 1, ncols], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\mathrm{log}_{10} \, \nu_{\mathrm{eff}}$ $\mathrm{(Pa \, yr \, m)}$", halign = :center; nuopts...)
 
-rowgap!(fig.layout, 5)
-colgap!(fig.layout, 5)
-fig
+rowgap!(figA7.layout, 5)
+colgap!(figA7.layout, 5)
+figA7
 
-save(plotsdir("16km/hysteresis/figA7.png"), fig)
-save(plotsdir("16km/hysteresis/figA7.pdf"), fig)
+save(plotsdir("v2/hysteresis/figA7.png"), figA7)
+save(plotsdir("v2/hysteresis/figA7.pdf"), figA7)

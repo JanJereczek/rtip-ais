@@ -33,7 +33,7 @@ function format_axs!(axx, atm_axx, x1, x2)
     xlims!(atm_axx, x1 * polar_amplification, x2 * polar_amplification)
 
     axx.titlegap = 80
-    axx.xticks = -10:1:10
+    axx.xticks = -10:1:12
     axx.xminorticks = -10:0.2:20
     axx.xminorgridvisible = true
     axx.xlabel = L"GMT anomaly $f$ (K)"
@@ -192,53 +192,57 @@ save(plotsdir("v2/hysteresis/fig10.pdf"), fig10)
 # Fig 11 - Intermediate regrowth
 ###############################################
 
-xps = [
-    datadir("output/ais/v2/hyster/regrowth/aqef/intermediate/2"),
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow"),
-]
-xp_labels = [
-    "2",
-    "REF",
-]
-aqef_intermediate = AQEFResults(T, xps)
+xps = readdir(datadir("output/ais/v2/hyster/regrowth/aqef/minvisc/intermediate"),
+    join=true)
 
-lws = [lw2, lw3]
-cycling_colors = [
-    2,
-    xpcolors["REF"],
-]
+function extract_xp_number(str)
+    parts = split(str, '/')
+    lastpart = parts[end]
+    return parse(Int, last(split(lastpart, '_')))
+end
+
+ii = extract_xp_number.(xps)
+iii = sortperm(ii)
+xps = xps[iii]
+push!(xps, datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow"))
+aqef_intermediate = AQEFResults(T, xps)
+lws = fill(lw2, length(ii))
+push!(lws, lw3)
 
 fig11 = Figure(size=(800, 800), fontsize = 22)
 atm_ax3 = Axis(fig11[1, 1], aspect = AxisAspect(1))
 ax3 = Axis(fig11[1, 1], aspect = AxisAspect(1))
 
-sref = 500
+sref = 400
 f_retreat = aqef_intermediate.f[end][1:sref:end] ./ polar_amplification .+ f2015
 V_retreat = aqef_intermediate.V_sle[end][1:sref:end]
+cmap = cgrad(:darktest, range(0, stop=1, length=100))
+crange = (1, 11)
 lines!(
     ax3,
     f_retreat,
     V_retreat,
     linewidth = lws[end],
-    label = xp_labels[end],
+    # label = xp_labels[end],
     color = f_retreat,
-    colormap = :jet,
-    colorrange = (1, 11),
+    colormap = cmap,
+    colorrange = crange,
 )
-for i in 1:aqef_intermediate.n_xps-1
+for i in 2:aqef_intermediate.n_xps-1
     f = aqef_intermediate.f[i][1:s:end] ./ polar_amplification .+ f2015
     V = aqef_intermediate.V_sle[i][1:s:end]
-    c = fill(maximum(f), length(f))
+    p = (maximum(f) - crange[1]) / (crange[2] - crange[1])
+    c = cmap[round(Int, p * 99) + 1]
     lines!(
         ax3,
         f,
         V,
         linewidth = lws[i],
         color = c,
-        colormap = :jet,
-        colorrange = (1, 11),
+        label = L"$f_\mathrm{max} = %$(round(f[1], digits = 1)) \, \mathrm{K}$",
     )
 end
+axislegend(ax3, position = :rt)
 
 format_axs!(ax3, atm_ax3, x1, x2)
 fig11
