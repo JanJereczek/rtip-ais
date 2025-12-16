@@ -325,7 +325,7 @@ fig
 save(plotsdir("v2/rtip/ramp-heatmap-wsb-ext-$(plot_highlight_scatter).png"), fig)
 save(plotsdir("v2/rtip/ramp-heatmap-wsb-ext-$(plot_highlight_scatter).pdf"), fig)
 
-
+#=
 #####################################################################################
 # Plot RSL for RSB and R-tip gap for other basins
 #####################################################################################
@@ -561,3 +561,4 @@ rowgap!(fig2.layout, 1, 10)
 colgap!(fig2.layout, 5)
 save(plotsdir("16km/rtip/rsl-$region.png"), fig2)
 save(plotsdir("16km/rtip/rsl-$region.pdf"), fig2)
+=#
