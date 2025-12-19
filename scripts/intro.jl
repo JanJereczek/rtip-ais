@@ -7,7 +7,6 @@ using DelimitedFiles
 using Glob
 using Interpolations
 using LazyGrids
-using Loess
 using NCDatasets
 using NetCDF
 using Random

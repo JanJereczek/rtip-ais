@@ -34,7 +34,7 @@ cycling_colors = [
 
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xp_idx = aqef.n_xps
 f_ref = aqef.f[end] ./ polar_amplification
@@ -140,8 +140,8 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
         end
         @show i3, f_eq, V_eq
 
-        scatter!(axs[1, 1], f_eq .+ f2015, V_eq, color = :red, markersize = ms2)
-        text!(axs[1, 1], f_eq .+ f2015, V_eq, text = state_labels[i, j],
+        scatter!(axs[1, 1], f_eq .+ f2020, V_eq, color = :red, markersize = ms2)
+        text!(axs[1, 1], f_eq .+ f2020, V_eq, text = state_labels[i, j],
             color = :red, font = :bold, fontsize = 30, offset = text_offsets[i, j])
 
         hidedecorations!(axs[i, j])
@@ -164,18 +164,18 @@ s = 200
 alpha = 1
 for k in 1:aqef.n_xps
     if k < aqef.n_xps
-        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+        lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]), alpha = alpha)
     else
-        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2015,
+        lines!(axs[1, 1], aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]), alpha = alpha)
     end
 end
 
-# f2015 = 1.12
-scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2015, eql.V_sle;
+# f2020 = 1.12
+scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2020, eql.V_sle;
     color = :black, label = "EQL", markersize = ms1)
 
 text!(axs[1, 1], 1, 1, font = :bold, text = "(a)", color = :black, fontsize = 30)

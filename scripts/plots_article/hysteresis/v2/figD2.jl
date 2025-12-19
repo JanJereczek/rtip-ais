@@ -1,7 +1,7 @@
 include("../../../intro.jl")
 
 polar_amplification = 1.8
-f2015 = 1.2
+f2020 = 1.2
 f_to = 0.25
 
 T = Float32
@@ -57,9 +57,9 @@ scale_opts = [1, 2, 1, 2, 3, 4]
 set_theme!(theme_latexfonts())
 n_snaps, n_vars = length(k_snaps), length(vars)
 nrows, ncols = n_snaps, n_vars
-figA7 = Figure(size = (1600, 900), fontsize = 22)
-axs = [Axis(figA7[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
-inset_ax = Axis(figA7[1, 1], width = Relative(0.45), height = Relative(0.45),
+figD2 = Figure(size = (1600, 900), fontsize = 22)
+axs = [Axis(figD2[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
+inset_ax = Axis(figD2[1, 1], width = Relative(0.45), height = Relative(0.45),
     halign = 0.02, valign = 0.98)
 hidedecorations!(inset_ax)
 
@@ -114,24 +114,24 @@ rw = 0.9
 uticks = [-log10(umax), -log10(umax/100), log10(umax/100), log10(umax)]
 utickvals = Int.([-umax, -umax/100, umax/100, umax])
 uticklabels = string.(utickvals)
-Colorbar(figA7[nrows + 1, 1], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, 1], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\tau_{\text{d}, y}$ (kPa)", halign = :center; tauopts...)
-Colorbar(figA7[nrows + 1, 2], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, 2], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$u_y$ ($\mathrm{m \, yr^{-1}}$)", halign = :center, ticks = (uticks, uticklabels),
     ; uopts...)
-Colorbar(figA7[nrows + 1, 3], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, 3], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\tau_{\text{d}, x}$ (kPa)", halign = :center; tauopts...)
-Colorbar(figA7[nrows + 1, 4], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, 4], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$u_x$ ($\mathrm{m \, yr^{-1}}$)", halign = :center, ticks = (uticks, uticklabels),
     ; uopts...)
-Colorbar(figA7[nrows + 1, 5], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, 5], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\text{SMB}$ ($\mathrm{m \, yr^{-1}}$)", halign = :center; smbopts...)
-Colorbar(figA7[nrows + 1, ncols], vertical = false, width = Relative(rw), flipaxis = false,
+Colorbar(figD2[nrows + 1, ncols], vertical = false, width = Relative(rw), flipaxis = false,
     label = L"$\mathrm{log}_{10} \, \nu_{\mathrm{eff}}$ $\mathrm{(Pa \, yr \, m)}$", halign = :center; nuopts...)
 
-rowgap!(figA7.layout, 5)
-colgap!(figA7.layout, 5)
-figA7
+rowgap!(figD2.layout, 5)
+colgap!(figD2.layout, 5)
+figD2
 
-save(plotsdir("v2/hysteresis/figA7.png"), figA7)
-save(plotsdir("v2/hysteresis/figA7.pdf"), figA7)
+save(plotsdir("v2/hysteresis/figD2.png"), figD2)
+save(plotsdir("v2/hysteresis/figD2.pdf"), figD2)

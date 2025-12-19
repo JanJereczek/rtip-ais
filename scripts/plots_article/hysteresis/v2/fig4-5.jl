@@ -5,6 +5,7 @@ regrowth_dir = datadir("output/ais/v2/hyster/regrowth")
 xps = [
     "$regrowth_dir/aqef/dpr",
     "$regrowth_dir/aqef/upl",
+    "$regrowth_dir/aqef/minvisc/refnomslow-restarted",
     "$regrowth_dir/aqef/refnomslow",
 ]
 aqef = AQEFResults(T, xps)
@@ -13,13 +14,15 @@ eql = EquilResults(T, "$regrowth_dir/equil/refnomslow")
 xp_labels = [
     "DPR",
     "UPL",
+    nothing,
     "REF",
 ]
 lw1, lw2 = 3, 6
-lws = [lw1, lw1, lw2]
+lws = [lw1, lw1, lw2, lw2]
 cycling_colors = [
     xpcolors["DPR"],
     xpcolors["UPL"],
+    xpcolors["REF"],
     xpcolors["REF"],
 ]
 
@@ -29,7 +32,7 @@ cycling_colors = [
 
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xp_idx = aqef.n_xps
 f_ref = aqef.f[end] ./ polar_amplification
@@ -65,22 +68,24 @@ bifs = [
     (2.658, "Aurora", 17, 7.8),
     (2.573, "Aurora-Wilkes", 45, 15.5),
     (2.424, "Wilkes", 25, 7.5),
-    (1.174, "Wilkes", 30, 7.5),
+    (1.174, "Wilkes", 35, 7.5),
+    (0.9, "Wilkes & Siple Coast", 5, 22),
+    (0.45, "Wilkes", 40, 7.5),
 ]
 
 f_bif = [bifs[i][1] for i in eachindex(bifs)]
 vlines!(ax, f_bif, color = :gray60, alpha = 0.5, linewidth = 5)
 
 for i in eachindex(bifs)
-    rectangle!(ax, (bifs[i][1] - 0.13, bifs[i][3] - 0.4), 0.3, bifs[i][4])
-    text!(ax, bifs[i][1] + 0.15, bifs[i][3], text = bifs[i][2], rotation = π/2, fontsize = 18)
+    rectangle!(ax, (bifs[i][1] - 0.13, bifs[i][3] - 0.4), 0.3, 0.7*bifs[i][4])
+    text!(ax, bifs[i][1] - 0.12, bifs[i][3], text = bifs[i][2], rotation = π/2, fontsize = 18)
 end
 vlines!(ax, 1f6, alpha = 0.9, color = :gray60, linewidth = 6, label = "Bifurcation")
 
 s = 200
 alpha = 1
 for k in 1:aqef.n_xps
-    lines!(ax, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+    lines!(ax, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
         aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
         color = lcolor(cycling_colors[k]), alpha = alpha)
 end
@@ -89,10 +94,21 @@ idx = sortperm(eql.f)
 f = eql.f[idx]
 V_sle = eql.V_sle[idx]
 V_sle = filter_outliers(V_sle, mode = :low)
-scatter!(ax, f ./ polar_amplification .+ f2015, V_sle;
+scatter!(ax, f ./ polar_amplification .+ f2020, V_sle;
     color = :cornflowerblue, label = "EQL", markersize = ms1)
-Legend(fig4[0, 1], ax, nbanks = 5, framevisible = false)
-rowsize!(fig4.layout, 0, 20)
+axislegend(ax, position = :lt)
+# Legend(fig4[0, 1], ax, nbanks = 5, framevisible = false)
+
+# Compute mean diff between eql and ref
+idx = sortperm(aqef.f[end])
+aqef_itp = linear_interpolation(aqef.f[end][idx] ./ polar_amplification .+ f2020, aqef.V_sle[end][idx])
+aqef_eql = aqef_itp.(f ./ polar_amplification .+ f2020)
+mean_diff = mean(abs.(aqef_eql[f .< 16] .- V_sle[f .< 16])) # exclude ranges where volue = 0 to avoid underestimating error
+println("Mean difference REF vs EQL: $(round(mean_diff, digits=2)) m SLE")
+lines(f[f .< 16], aqef_eql[f .< 16] .- V_sle[f .< 16])
+ax.xreversed = true
+
+# rowsize!(fig4.layout, 0, 20)
 colsize!(fig4.layout, 1, 700)
 # axislegend(ax, position = :ct)
 fig4
@@ -151,8 +167,8 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     file2D_plot = file2D
     plot_index = xp_idx
 
-    i3 = argmin( ( aqef.f[plot_index] ./ polar_amplification .+ f2015 .- forcing) .^ 2)
-    f_eq = aqef.f[plot_index][i3] ./ polar_amplification .+ f2015
+    i3 = argmin( ( aqef.f[plot_index] ./ polar_amplification .+ f2020 .- forcing) .^ 2)
+    f_eq = aqef.f[plot_index][i3] ./ polar_amplification .+ f2020
     V_eq = aqef.V_sle[plot_index][i3]
     frame_index = argmin(abs.(aqef.t_2D[plot_index] .- aqef.t_1D[plot_index][i3]))
     z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D_plot,

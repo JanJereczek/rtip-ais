@@ -3,7 +3,7 @@ include("../../intro.jl")
 T = Float32
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 lw1, lw2 = 2, 5
 
 regrowth_dir = datadir("output/ais/hyster/16km/retreat")
@@ -122,9 +122,9 @@ stiching_idx = findfirst(f_ref .<= stiching_forcing)
 
 s = Int(mean(diff(aqef.t_2D[1])) / mean(diff(aqef.t_1D[1])))
 s2 = Int(mean(diff(aqef2.t_2D[1])) / mean(diff(aqef2.t_1D[1])))
-ff = aqef.f[1] ./ polar_amplification .+ f2015
-ff21 = aqef2.f[1] ./ polar_amplification .+ f2015
-ff22 = aqef2.f[2] ./ polar_amplification .+ f2015
+ff = aqef.f[1] ./ polar_amplification .+ f2020
+ff21 = aqef2.f[1] ./ polar_amplification .+ f2020
+ff22 = aqef2.f[2] ./ polar_amplification .+ f2020
 
 function Loess.loess(xout, x, y; span = 0.1)
     model = loess(x, y, span = span)
@@ -323,7 +323,7 @@ lgray = :gray75
 dgray = :gray50
 shade = [(1.2, 1.3), (4.7, 4.8), (6.1, 6.2), (7.0, 7.1), (7.8, 7.9)]
 lightshade = [(4.6, 4.7), (8.5, 8.6), (9.9, 10), (10.2, 10.3)]
-shade_transitions!([ax_slp, ax_dslp, ax], shade, f2015, 0.2, dgray)
+shade_transitions!([ax_slp, ax_dslp, ax], shade, f2020, 0.2, dgray)
 shade_transitions!([ax_slp, ax_dslp, ax], lightshade, 0.0, 0.2, lgray)
 
 shade = [(1.3, 1.4), (2.6, 2.7), (2.9, 3.0), (3.25, 3.35),
@@ -335,11 +335,11 @@ shade_transitions!([ax2_slp, ax2_dslp, ax2], lightshade, 0.0, 0.2, lgray)
 stiching_idx_2D = Int(ceil(stiching_idx / s2))
 for k in 1:aqef2.n_xps
     if k < aqef2.n_xps
-        lines!(ax2, aqef2.f[k][1:s2:end] ./ polar_amplification .+ f2015,
+        lines!(ax2, aqef2.f[k][1:s2:end] ./ polar_amplification .+ f2020,
             aqef2.V_sle[k][1:s2:end], linewidth = lw2, label = xp_labels[k],
             color = xpcolors["REF"])
     else
-        lines!(ax2, aqef2.f[k][1:s2:stiching_idx] ./ polar_amplification .+ f2015,
+        lines!(ax2, aqef2.f[k][1:s2:stiching_idx] ./ polar_amplification .+ f2020,
             aqef2.V_sle[k][1:s2:stiching_idx], linewidth = lw2, label = xp_labels[k],
             color = xpcolors["REF"])
     end

@@ -7,19 +7,41 @@ include("../../../intro.jl")
 T = Float32
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 
 s = 400                     # stride
 lw1, lw2, lw3 = 5, 5, 7     # line widths
-ms1, ms2 = 15, 20           # marker sizes
+ms1, ms2 = 8, 20           # marker sizes
 
-ssp126_2100 = 2.0
-ssp245_2100 = 3.0
-ssp370_2100 = 4.4
-ssp585_2100 = 5.4
+# From tab spm1 of ipcc
+ssp126_2100 = 1.8
+ssp245_2100 = 2.7
+ssp370_2100 = 3.6
+ssp585_2100 = 4.4
+
+ssp126_2100_hi = 2.4
+ssp245_2100_hi = 3.5
+ssp370_2100_hi = 4.6
+ssp585_2100_hi = 5.7
+
 ssp2100 = [ssp126_2100, ssp245_2100, ssp370_2100, ssp585_2100]
+ssp2100_hi = [ssp126_2100_hi, ssp245_2100_hi,
+    ssp370_2100_hi, ssp585_2100_hi]
 ssp_labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
-ssp_line_opts = (linewidth = lw1, linestyle = :dash, alpha = 0.7)
+ssp_short_labels = [
+    L"\bar{f}_\text{SSP1-2.6}",
+    L"\bar{f}_\text{SSP2-4.5}",
+    L"\bar{f}_\text{SSP3-7.0}",
+    L"\bar{f}_\text{SSP5-8.5}",
+]
+ssphi_short_labels = [
+    L"\hat{f}_\text{SSP1-2.6}",
+    L"\hat{f}_\text{SSP2-4.5}",
+    L"\hat{f}_\text{SSP3-7.0}",
+    L"\hat{f}_\text{SSP5-8.5}",
+]
+ssp_line_opts = (linewidth = lw1, alpha = 0.7)
+ssphi_line_opts = (linestyle = :dash, linewidth = 3, alpha = 0.7)
 ssp_colors = [
     :darkblue,
     :orange,
@@ -42,7 +64,6 @@ function format_axs!(axx, atm_axx, x1, x2)
     axx.yminorgridvisible = true
     axx.ylabel = L"AIS volume $V_\mathrm{af}$ (m SLE)"
     ylims!(axx, 0, 60)
-    axislegend(axx, position = :rt)
 
     atm_axx.xticks = -10:2:30
     atm_axx.xgridvisible = false
@@ -52,7 +73,7 @@ function format_axs!(axx, atm_axx, x1, x2)
 end
 
 #####################################################
-# Fig 9 - Comparison among processes
+# Loading data
 ######################################################
 
 dir = datadir("output/ais/v2/hyster")
@@ -65,10 +86,11 @@ xps = [
     "$dir/regrowth/aqef/atm",
     "$dir/retreat/aqef/minvisc/refnomslow",
     "$dir/regrowth/aqef/refnomslow",
+    "$dir/regrowth/aqef/minvisc/refnomslow-restarted",
 ]
 aqef = AQEFResults(T, xps)
 
-lws = [lw2, lw2, lw2, lw2, lw2, lw2, lw3, lw3]
+lws = [lw2, lw2, lw2, lw2, lw2, lw2, lw3, lw3, lw3]
 xp_labels = [
     "HOW",
     nothing,
@@ -77,6 +99,7 @@ xp_labels = [
     "ATM",
     nothing,
     "REF",
+    nothing,
     nothing,
 ]
 cycling_colors = [
@@ -88,40 +111,49 @@ cycling_colors = [
     xpcolors["ATM"],
     xpcolors["REF"],
     xpcolors["REF"],
+    xpcolors["REF"],
 ]
 
 eqldir1 = "$dir/retreat/equil/refnomslow"
 eql1 = EquilResults(T, eqldir1)
-# eqldir2 = datadir("output/ais/hyster/16km/regrowth/equil")
-# eql2 = EquilResults(T, eqldir2)
+eqldir2 = datadir("output/ais/v2/hyster/regrowth/equil/refnomslow")
+eql2 = EquilResults(T, eqldir2)
+
+#####################################################
+# Fig 10 - Comparison among processes
+######################################################
 
 set_theme!(theme_latexfonts())
-fig9 = Figure(size=(800, 800), fontsize = 22)
-atm_ax1 = Axis(fig9[1, 1], aspect = AxisAspect(1))
-ax1 = Axis(fig9[1, 1], aspect = AxisAspect(1))
+fig10 = Figure(size=(800, 800), fontsize = 22)
+atm_ax1 = Axis(fig10[1, 1], aspect = AxisAspect(1))
+ax1 = Axis(fig10[1, 1], aspect = AxisAspect(1))
 for (i, ssp) in enumerate(ssp2100)
-    vlines!(ax1, ssp, label = ssp_labels[i]*", 2100", color = xpcolors[ssp_labels[i]];
+    vlines!(ax1, ssp, label = ssp_short_labels[i], color = xpcolors[ssp_labels[i]];
         ssp_line_opts...)
+    vlines!(ax1, ssp2100_hi[i], label = ssphi_short_labels[i], color = xpcolors[ssp_labels[i]];
+        ssphi_line_opts...)
     # vlines!(ax1, ssp, color = xpcolors[ssp_labels[i]]; ssp_line_opts...)
 end
-for k in 1:aqef.n_xps
-    lines!(ax1, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+for k in 3:aqef.n_xps
+    lines!(ax1, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
         aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
         color = lcolor(cycling_colors[k]))
 end
 x1, x2 = 0, 11
 format_axs!(ax1, atm_ax1, x1, x2)
-fig9
-save(plotsdir("v2/hysteresis/fig9.png"), fig9)
-save(plotsdir("v2/hysteresis/fig9.pdf"), fig9)
+axislegend(ax1, position = :rt)
+
+fig10
+save(plotsdir("v2/hysteresis/fig10.png"), fig10)
+save(plotsdir("v2/hysteresis/fig10.pdf"), fig10)
 
 ######################################################
-# Fig 10 - Comparison to previous studies
+# Fig 11 - Comparison to previous studies
 ######################################################
 
-fig10 = Figure(size=(800, 800), fontsize = 22)
-ax2 = Axis(fig10[1, 1], aspect = AxisAspect(1))
-atm_ax2 = Axis(fig10[1, 1], aspect = AxisAspect(1))
+fig11 = Figure(size=(800, 800), fontsize = 22)
+ax2 = Axis(fig11[1, 1], aspect = AxisAspect(1))
+atm_ax2 = Axis(fig11[1, 1], aspect = AxisAspect(1))
 
 h94dir = datadir("processed/huybrechts1994")
 h94_retreat, _ = readdlm("$h94dir/h94-retreat.csv", ',', header = true)
@@ -146,6 +178,14 @@ g20_colors = [xpcolors["G20R"], xpcolors["G20E"], xpcolors["G20R"], xpcolors["G2
 g20_plotstyle = [:lines, :scatterlines, :lines, :scatterlines]
 g20_markers = [nothing, :dtriangle, nothing, :utriangle]
 
+for (i, ssp) in enumerate(ssp2100)
+    vlines!(ax2, ssp, label = ssp_short_labels[i], color = xpcolors[ssp_labels[i]];
+        ssp_line_opts...)
+    vlines!(ax2, ssp2100_hi[i], label = ssphi_short_labels[i], color = xpcolors[ssp_labels[i]];
+        ssphi_line_opts...)
+    # vlines!(ax1, ssp, color = xpcolors[ssp_labels[i]]; ssp_line_opts...)
+end
+
 for i in eachindex(g20)
     if g20_plotstyle[i] == :lines
         lines!(ax2, g20[i][:, 1] ./ polar_amplification, g20[i][:, 2], linewidth = 3,
@@ -169,24 +209,31 @@ scatterlines!(ax2, h94_regrowth[:, 1] ./ polar_amplification,
     linewidth = lw1, color = xpcolors["H94"], markersize = ms2)
 
 
-
-for k in [1, 2, 7, 8]
-    lines!(ax2, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+for k in [1, 2, 7, 8, 9]
+    lines!(ax2, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
         aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
         color = lcolor(cycling_colors[k]))
 end
 
-# for axx in [ax2]
-#     scatter!(axx, eql1.f ./ polar_amplification .+ f2015, eql1.V_sle;
-#         color = :black, label = "EQL", markersize = ms1)
-#     scatter!(axx, eql2.f ./ polar_amplification .+ f2015, eql2.V_sle;
-#         color = :black, markersize = ms1)
-# end
+idx1 = sortperm(eql1.f)
+f1 = eql1.f[idx1]
+V_sle1 = eql1.V_sle[idx1]
+V_sle1 = filter_outliers(V_sle1)
+scatter!(ax2, f1 ./ polar_amplification .+ f2020, V_sle1;
+    color = xpcolors["EQL"], label = "EQL", markersize = ms1)
+idx2 = sortperm(eql2.f)
+f2 = eql2.f[idx2]
+V_sle2 = eql2.V_sle[idx2]
+V_sle2 = filter_outliers(V_sle2, mode = :low)
+scatter!(ax2, f2 ./ polar_amplification .+ f2020, V_sle2;
+    color = :cornflowerblue, markersize = ms1)
 
 format_axs!(ax2, atm_ax2, x1, 12)
-fig10
-save(plotsdir("v2/hysteresis/fig10.png"), fig10)
-save(plotsdir("v2/hysteresis/fig10.pdf"), fig10)
+axislegend(ax2, position = :rt, nbanks = 2)
+
+fig11
+save(plotsdir("v2/hysteresis/fig11.png"), fig11)
+save(plotsdir("v2/hysteresis/fig11.pdf"), fig11)
 
 ###############################################
 # Fig 11 - Intermediate regrowth
@@ -209,12 +256,20 @@ aqef_intermediate = AQEFResults(T, xps)
 lws = fill(lw2, length(ii))
 push!(lws, lw3)
 
-fig11 = Figure(size=(800, 800), fontsize = 22)
-atm_ax3 = Axis(fig11[1, 1], aspect = AxisAspect(1))
-ax3 = Axis(fig11[1, 1], aspect = AxisAspect(1))
+fig12 = Figure(size=(800, 800), fontsize = 22)
+atm_ax3 = Axis(fig12[1, 1], aspect = AxisAspect(1))
+ax4 = Axis(fig12[1, 1], aspect = AxisAspect(1))
+ax3 = Axis(fig12[1, 1], aspect = AxisAspect(1))
+for (i, ssp) in enumerate(ssp2100)
+    vlines!(ax4, ssp, label = ssp_short_labels[i], color = xpcolors[ssp_labels[i]];
+        ssp_line_opts...)
+    vlines!(ax4, ssp2100_hi[i], label = ssphi_short_labels[i], color = xpcolors[ssp_labels[i]];
+        ssphi_line_opts...)
+    # vlines!(ax1, ssp, color = xpcolors[ssp_labels[i]]; ssp_line_opts...)
+end
 
 sref = 400
-f_retreat = aqef_intermediate.f[end][1:sref:end] ./ polar_amplification .+ f2015
+f_retreat = aqef_intermediate.f[end][1:sref:end] ./ polar_amplification .+ f2020
 V_retreat = aqef_intermediate.V_sle[end][1:sref:end]
 cmap = cgrad(:darktest, range(0, stop=1, length=100))
 crange = (1, 11)
@@ -229,7 +284,7 @@ lines!(
     colorrange = crange,
 )
 for i in 2:aqef_intermediate.n_xps-1
-    f = aqef_intermediate.f[i][1:s:end] ./ polar_amplification .+ f2015
+    f = aqef_intermediate.f[i][1:s:end] ./ polar_amplification .+ f2020
     V = aqef_intermediate.V_sle[i][1:s:end]
     p = (maximum(f) - crange[1]) / (crange[2] - crange[1])
     c = cmap[round(Int, p * 99) + 1]
@@ -243,8 +298,14 @@ for i in 2:aqef_intermediate.n_xps-1
     )
 end
 axislegend(ax3, position = :rt)
+Legend(fig12[0, 1], ax4, nbanks = 4)
+rowsize!(fig12.layout, 0, 50)
+colsize!(fig12.layout, 1, 700)
 
 format_axs!(ax3, atm_ax3, x1, x2)
-fig11
-save(plotsdir("v2/hysteresis/fig11.png"), fig11)
-save(plotsdir("v2/hysteresis/fig11.pdf"), fig11)
+hidedecorations!(atm_ax3)
+hidedecorations!(ax4)
+xlims!(ax4, 0, 11)
+fig12
+save(plotsdir("v2/hysteresis/fig12.png"), fig12)
+save(plotsdir("v2/hysteresis/fig12.pdf"), fig12)

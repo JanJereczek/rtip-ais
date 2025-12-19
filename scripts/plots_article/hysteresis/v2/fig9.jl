@@ -1,0 +1,72 @@
+include("../../../intro.jl")
+
+polar_amplification = 1.8
+f_to = 0.25
+f2020 = 1.2
+
+dir = datadir("output/ais/v2/hyster")
+file_retreat = "$dir/retreat/aqef/minvisc/refnomslow/0/yelmo2D.nc"
+file_regrowth = "$dir/regrowth/aqef/refnomslow/0/yelmo2D.nc"
+file_retreat_1D = replace(file_retreat, "yelmo2D.nc" => "yelmo1D.nc")
+file_regrowth_1D = replace(file_regrowth, "yelmo2D.nc" => "yelmo1D.nc")
+
+x, y = ncread(file_retreat, "xc"), ncread(file_retreat, "yc")
+nx, ny = length(x), length(y)
+f_intermediate = 4
+
+f_retreat = ncread(file_retreat_1D, "hyst_f_now") ./ polar_amplification .+ f2020
+t_retreat_1D = ncread(file_retreat_1D, "time")
+t_retreat_2D = ncread(file_retreat, "time")
+k_intermediate_retreat_1D = argmin((f_retreat .- f_intermediate).^2)
+k_intermediate_retreat = argmin((t_retreat_1D[k_intermediate_retreat_1D] .- t_retreat_2D).^2)
+
+f_regrowth = ncread(file_regrowth_1D, "hyst_f_now") ./ polar_amplification .+ f2020
+t_regrowth_1D = ncread(file_regrowth_1D, "time")
+t_regrowth_2D = ncread(file_regrowth, "time")
+k_intermediate_regrowth_1D = argmin((f_regrowth .- f_intermediate).^2)
+k_intermediate_regrowth = argmin((t_regrowth_1D[k_intermediate_regrowth_1D] .- t_regrowth_2D).^2)
+
+
+z_bed_dpr = ncread(file_retreat, "z_bed", start = [1, 1, 1], count = [-1, -1, 1])
+z_bed_retreat = ncread(file_retreat, "z_bed", start = [1, 1, k_intermediate_retreat], count = [-1, -1, 1])
+z_bed_upl = ncread(file_regrowth, "z_bed", start = [1, 1, 1], count = [-1, -1, 1])
+z_bed_regrowth = ncread(file_regrowth, "z_bed", start = [1, 1, k_intermediate_regrowth], count = [-1, -1, 1])
+
+xy_max = 2800
+i1_ais = findfirst(x .> -xy_max)+10
+i2_ais = findlast(x .< xy_max)
+j1_ais = findfirst(y .> -xy_max)+20
+j2_ais = findlast(y .< xy_max)-20
+
+bsl_0 = 0
+bsl_1 = 58
+lw1 = 2
+lw2 = 5
+
+nrows = 1
+ncols = 3
+set_theme!(theme_latexfonts())
+fig9 = Figure(size = (1500, 600), fontsize = 22)
+axs = [Axis(fig9[i, j], aspect = DataAspect()) for i in 1:nrows, j in 1:ncols]
+z_bed = [z_bed_dpr, z_bed_upl, z_bed_regrowth]
+axs[1, 1].title = "(a) Present-day ice thickness (DPR)"
+# axs[1, 2].title = "(b) Intermediate retreat"
+axs[1, 2].title = "(b) Without ice (UPL)"
+axs[1, 3].title = "(c) Intermediate regrowth"
+f_frames = [f2020, 12, f_intermediate]
+for i in eachindex(z_bed)
+    zb = z_bed[i]
+    heatmap!(axs[1, i], view(zb, i1_ais:i2_ais, j1_ais:j2_ais); cmaps["z_bed5"]...)
+    hidedecorations!(axs[1, i])
+    text!(axs[1, i], 5, 5, text="f = $(f_frames[i]) K", font = :bold, color = :white)
+end
+
+Colorbar(fig9[nrows+1, 1:3], label = "Bed elevation (km)", width = Relative(0.3),
+    flipaxis = false, vertical = false, ticks = latexifyticks(-4:2, 1e3);
+    cmaps["z_bed5"]...)
+
+rowgap!(fig9.layout, -10)
+colgap!(fig9.layout, 10)
+fig9
+save(plotsdir("v2/hysteresis/fig9.png"), fig9)
+save(plotsdir("v2/hysteresis/fig9.pdf"), fig9)

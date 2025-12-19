@@ -31,7 +31,7 @@ cycling_colors = [
 polar_amplification = 1.8
 f_to = 0.25
 xp_idx = aqef.n_xps
-f2015 = 1.2
+f2020 = 1.2
 
 cropx, cropy = 20, 35
 aratio = (381 - 2*cropx) / (381 - 2*cropy)
@@ -50,7 +50,7 @@ s = 400
 shade = [(1.2, 1.3), (4.6, 4.7), (6.1, 6.2), (7.0, 7.1), (7.8, 7.9)]
 lightshade = [(4.6, 4.7), (8.5, 8.6), (9.9, 10), (10.2, 10.3)]
 for i in eachindex(shade)
-    vlines!(axs[1, 1], (shade[i][1]:0.01:shade[i][2]) .+ f2015, alpha = 0.2,
+    vlines!(axs[1, 1], (shade[i][1]:0.01:shade[i][2]) .+ f2020, alpha = 0.2,
         linewidth = 3, color = :gray70)
 end
 vlines!(axs[1, 1], 1f6, alpha = 0.9, color = :gray70, linewidth = 6, label = "Bifurcation")
@@ -150,8 +150,8 @@ if make_maps
             end
             @show i3, f_eq, V_eq
 
-            scatter!(axs[1, 1], f_eq .+ f2015, V_eq, color = :red, markersize = ms2)
-            text!(axs[1, 1], f_eq .+ f2015, V_eq, text = state_labels[i, j],
+            scatter!(axs[1, 1], f_eq .+ f2020, V_eq, color = :red, markersize = ms2)
+            text!(axs[1, 1], f_eq .+ f2020, V_eq, text = state_labels[i, j],
                 color = :red, fontsize = 30, font = :bold, offset = text_offsets[i, j])
 
             hidedecorations!(axs[i, j])
@@ -183,11 +183,11 @@ if make_maps
 end
 
 for k in 1:aqef.n_xps
-    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2015, aqef.V_sle[k][1:s:end],
+    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2020, aqef.V_sle[k][1:s:end],
         linewidth = lws[k], label = xp_labels[k], color = lcolor(cycling_colors[k]))
 end
 
-scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2015, eql.V_sle;
+scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2020, eql.V_sle;
     color = :black, label = "EQL", markersize = ms1)
 
 axislegend(axs[1, 1], position = :lb, nbanks = 1)

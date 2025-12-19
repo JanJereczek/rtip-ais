@@ -3,7 +3,7 @@ include("../../../intro.jl")
 T = Float32
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 lw1, lw2 = 2, 5
 
 xps = [datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow")]
@@ -12,60 +12,106 @@ aqef = AQEFResults(T, xps)
 
 xps2 = [
     datadir("output/ais/v2/hyster/regrowth/aqef/refnomslow"),
-    datadir("output/ais/v2/hyster/regrowth/aqef/minvisc/refnomslow-restarted"),
+    # datadir("output/ais/v2/hyster/regrowth/aqef/minvisc/refnomslow-restarted"),
 ]
 xp_labels = [
-    nothing,
+    # nothing,
     "REF",
 ]
 aqef2 = AQEFResults(T, xps2)
+s = Int(mean(diff(aqef.t_2D[1])) / mean(diff(aqef.t_1D[1])))
+# s2 = Int(mean(diff(aqef2.t_2D[1])) / mean(diff(aqef2.t_1D[1])))
+ff = T.(aqef.f[1] ./ polar_amplification .+ f2020)
+ff21 = T.(aqef2.f[1] ./ polar_amplification .+ f2020)
+# ff22 = T.(aqef2.f[2] ./ polar_amplification .+ f2020)
 
 apr = get_area_perimeter_ratio(aqef)
-grline, flslp = get_slope_flow_product(xps[1])
+grline, flslp, zb_dx, zb_dy = get_slope_flow_product(xps[1], dslp = 1)
+grline, asp = acceleration_slope_product(xps[1], dslp = 1)
+grline, vasp = velocity_acceleration_slope_product(xps[1], dslp = 1)
+k1 = 2
+heatmap(view(zb_dx, :, :, k1))
+heatmap(view(zb_dy, :, :, k1))
+heatmap(view(flslp, :, :, k1))
+heatmap(view(asp, :, :, k1))
+heatmap(view(vasp, :, :, k1))
+extrema(view(zb_dx, :, :, k1))
+extrema(view(zb_dy, :, :, k1))
+extrema(view(flslp, :, :, k1))
+extrema(view(asp, :, :, k1))
+extrema(view(vasp, :, :, k1)) 
 
-meanslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
-mean_signed_flslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+k2 = 55
+heatmap(view(zb_dx, :, :, k2))
+heatmap(view(zb_dy, :, :, k2))
+heatmap(view(flslp, :, :, k2))
+heatmap(view(asp, :, :, k2))
+heatmap(view(vasp, :, :, k2))
+extrema(view(zb_dx, :, :, k2))
+extrema(view(zb_dy, :, :, k2))
+extrema(view(flslp, :, :, k2))
+extrema(view(asp, :, :, k2))
+extrema(view(vasp, :, :, k2))
+
+mean_flslp_positive = Vector{Float32}(undef, length(aqef.t_2D[1]))
 pnorm_flslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
-maxslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
-minslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
-slp99 = Vector{Float32}(undef, length(aqef.t_2D[1]))
-slp01 = Vector{Float32}(undef, length(aqef.t_2D[1]))
-meanslp99 = Vector{Float32}(undef, length(aqef.t_2D[1]))
-signed_flslp = max.(flslp, 0f0)
+max_flslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+percentile_flslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+percentile_mean_flslp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+flslp_positive = max.(flslp, 0f0)
 pnorm = 2
+
+max_asp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+max_vasp = Vector{Float32}(undef, length(aqef.t_2D[1]))
+min_vasp = Vector{Float32}(undef, length(aqef.t_2D[1]))
 for k in axes(flslp, 3)
-    meanslp[k] = mean(view(flslp, :, :, k))
-    mean_signed_flslp[k] = mean(view(signed_flslp, :, :, k))
-    pnorm_flslp[k] = (mean(view(signed_flslp, :, :, k) .^ pnorm)) ^ (1 / pnorm)
-    maxslp[k] = maximum(view(flslp, :, :, k))
-    minslp[k] = minimum(view(flslp, :, :, k))
-    slp99[k] = percentile(flslp[:, :, k][view(grline, :, :, k)], 99.5)
-    slp01[k] = percentile(flslp[:, :, k][view(grline, :, :, k)], 1)
-    meanslp99[k] = mean(flslp[:, :, k][view(flslp, :, :, k) .> slp99[k]])
+    mean_flslp_positive[k] = mean(view(flslp_positive, :, :, k))
+    pnorm_flslp[k] = (mean(view(flslp_positive, :, :, k) .^ pnorm)) ^ (1 / pnorm)
+    max_flslp[k] = maximum(view(flslp, :, :, k))
+    percentile_flslp[k] = percentile(flslp[:, :, k][view(grline, :, :, k)], 99.5)
+    percentile_mean_flslp[k] = mean(flslp[:, :, k][view(flslp, :, :, k) .> percentile_flslp[k]])
+
+    max_asp[k] = maximum(view(asp, :, :, k))
+    max_vasp[k] = maximum(view(vasp, :, :, k))
+    min_vasp[k] = minimum(view(vasp, :, :, k))
 end
+figh = Figure()
+ax1 = Axis(figh[1, 1])
+ax2 = Axis(figh[2, 1])
+ax3 = Axis(figh[3, 1])
+lines!(ax1, aqef.f[1][1:s:end], max_flslp, label = "max")
+lines!(ax1, aqef.f[1][1:s:end], percentile_flslp, label = "99.5 percentile")
+lines!(ax1, aqef.f[1][1:s:end], percentile_mean_flslp, label = "mean above 99.5 percentile")
+lines!(ax2, aqef.f[1][1:s:end], mean_flslp_positive, label = "mean positive")
+lines!(ax3, aqef.f[1][1:s:end], pnorm_flslp, label = "pnorm")
+axislegend(ax1)
+axislegend(ax2)
+axislegend(ax3)
+figh
+lines(max_asp)
+lines(max_vasp)
+lines(min_vasp)
+
 
 apr2 = get_area_perimeter_ratio(aqef2)
 grline21, flslp21 = get_slope_flow_product(xps2[1])
-grline22, flslp22 = get_slope_flow_product(xps2[2])
-maxslp1 = Vector{Float32}(undef, length(aqef2.t_2D[1]))
-maxslp2 = Vector{Float32}(undef, length(aqef2.t_2D[2]))
+# grline22, flslp22 = get_slope_flow_product(xps2[2])
+max_flslp1 = Vector{Float32}(undef, length(aqef2.t_2D[1]))
 for k in axes(flslp21, 3)
-    maxslp1[k] = maximum(view(flslp21, :, :, k))
+    max_flslp1[k] = maximum(view(flslp21, :, :, k))
 end
+
+maxslp2 = Vector{Float32}(undef, length(aqef2.t_2D[2]))
 for k in axes(flslp22, 3)
     maxslp2[k] = maximum(view(flslp22, :, :, k))
 end
 
 xp_idx = aqef2.n_xps
-f_ref = aqef2.f[end] ./ polar_amplification .+ f2015
+f_ref = aqef2.f[end] ./ polar_amplification .+ f2020
 stiching_forcing = -0.4
 stiching_idx = findfirst(f_ref .<= stiching_forcing)
 
-s = Int(mean(diff(aqef.t_2D[1])) / mean(diff(aqef.t_1D[1])))
-s2 = Int(mean(diff(aqef2.t_2D[1])) / mean(diff(aqef2.t_1D[1])))
-ff = T.(aqef.f[1] ./ polar_amplification .+ f2015)
-ff21 = T.(aqef2.f[1] ./ polar_amplification .+ f2015)
-ff22 = T.(aqef2.f[2] ./ polar_amplification .+ f2015)
+
 
 dt1 = mean(diff(aqef.t_2D[1]))
 dt2 = mean(diff(aqef2.t_2D[1]))
@@ -73,16 +119,16 @@ smoothing = "loess"
 
 if smoothing == "loess"
     dloess = 0.02
-    mslp = loess(ff[1:s:end], ff[1:s:end], maxslp, span = dloess)
-    mslp1 = loess(ff21[1:s2:end], ff21[1:s2:end], maxslp1, span = dloess)
+    mslp = loess(ff[1:s:end], ff[1:s:end], max_flslp, span = dloess)
+    mslp1 = loess(ff21[1:s2:end], ff21[1:s2:end], max_flslp1, span = dloess)
     mslp2 = loess(ff22[1:s2:end], ff22[1:s2:end], maxslp2, span = dloess)
     mapr = loess(ff[1:s:end], ff[1:s:end], apr[1], span = dloess)
     mapr1 = loess(ff21[1:s2:end], ff21[1:s2:end], apr2[1], span = dloess)
     mapr2 = loess(ff22[1:s2:end], ff22[1:s2:end], apr2[2], span = dloess)
 elseif smoothing == "rollmean"
     nx = 2
-    mslp = rollmean(ff[1:s:end], maxslp, nx = nx * 2)
-    mslp1 = rollmean(ff21[1:s2:end], maxslp1, nx = nx)
+    mslp = rollmean(ff[1:s:end], max_flslp, nx = nx * 2)
+    mslp1 = rollmean(ff21[1:s2:end], max_flslp1, nx = nx)
     mslp2 = rollmean(ff22[1:s2:end], maxslp2, nx = nx)
     mapr = rollmean(ff[1:s:end], apr[1], nx = nx * 2)
     mapr1 = rollmean(ff21[1:s2:end], apr2[1], nx = nx)
@@ -118,8 +164,8 @@ elseif detrend == "symmeandiff_smooth"
     dmapr2 = sym_mean_diff(mapr2, n, dt2)
     k1, k2 = 1, 0
 elseif detrend == "detrend"
-    dmslp = maxslp .- mslp
-    dmslp1 = maxslp1 .- mslp1
+    dmslp = max_flslp .- mslp
+    dmslp1 = max_flslp1 .- mslp1
     dmslp2 = maxslp2 .- mslp2
     dmapr = apr[1] .- mapr
     dmapr1 = apr2[1] .- mapr1
@@ -226,7 +272,7 @@ lgray = :gray75
 dgray = :gray50
 # shade = [(1.2, 1.3), (4.7, 4.8), (6.1, 6.2), (7.0, 7.1), (7.8, 7.9)]
 # lightshade = [(4.6, 4.7), (8.5, 8.6), (9.9, 10), (10.2, 10.3)]
-# shade_transitions!([ax_slp, ax_dslp, ax], shade, f2015, 0.2, dgray)
+# shade_transitions!([ax_slp, ax_dslp, ax], shade, f2020, 0.2, dgray)
 # shade_transitions!([ax_slp, ax_dslp, ax], lightshade, 0.0, 0.2, lgray)
 
 # shade = [(1.3, 1.4), (2.6, 2.7), (2.9, 3.0), (3.25, 3.35),
@@ -235,7 +281,7 @@ dgray = :gray50
 # shade_transitions!([ax2_slp, ax2_dslp, ax2], shade, 0.0, 0.2, dgray)
 # shade_transitions!([ax2_slp, ax2_dslp, ax2], lightshade, 0.0, 0.2, lgray)
 
-lines!(ax2, aqef2.f[1][1:s2:end] ./ polar_amplification .+ f2015,
+lines!(ax2, aqef2.f[1][1:s2:end] ./ polar_amplification .+ f2020,
     aqef2.V_sle[1][1:s2:end], linewidth = lw2, label = xp_labels[1],
     color = xpcolors["REF"])
 vlines!(ax, 1f6, color = dgray, linewidth = 5, alpha = 0.6, label = "Bifurcation")
@@ -244,7 +290,7 @@ axislegend(ax, position = :lb)
 
 lines!(ax, ff[1:s:end], aqef.V_sle[1][1:s:end], linewidth = lw2,
     label = xp_labels[1], color = xpcolors["REF"])
-lines!(ax_slp, ff[1:s:end], maxslp, linewidth = lw2, color = slp_color, alpha = 0.4)
+lines!(ax_slp, ff[1:s:end], max_flslp, linewidth = lw2, color = slp_color, alpha = 0.4)
 lines!(ax_slp, ff[1:s:end], mslp, linewidth = lw1, color = slp_color)
 lines!(ax_apr, ff[1:s:end][2:end], apr[1][2:end], linewidth = lw2, color = apr_color, alpha = 0.4)
 lines!(ax_apr, ff[1:s:end], mapr, linewidth = lw1, color = apr_color)
@@ -253,7 +299,7 @@ band!(ax_dapr, [0, 50], [-pp_apr, -pp_apr], [pp_apr, pp_apr], alpha = alpha_band
 lines!(ax_dapr, ff[k1:s:end], dmapr, linewidth = lw1, color = apr_color)
 lines!(ax_dslp, ff[k1:s:end], dmslp, linewidth = lw1, color = slp_color)
 
-lines!(ax2_slp, ff21[1:s2:end], maxslp1, linewidth = lw2, color = slp_color, alpha = 0.4)
+lines!(ax2_slp, ff21[1:s2:end], max_flslp1, linewidth = lw2, color = slp_color, alpha = 0.4)
 lines!(ax2_slp, ff22[1:s2:end], maxslp2, linewidth = lw2, color = slp_color, alpha = 0.4)
 lines!(ax2_slp, ff21[1:s2:end], mslp1, linewidth = lw1, color = slp_color)
 lines!(ax2_slp, ff22[1:s2:end], mslp2, linewidth = lw1, color = slp_color)

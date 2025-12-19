@@ -128,14 +128,14 @@ scatterlines!(ax2, h94_regrowth[:, 1] ./ polar_amplification,
 
 
 s = 400
-f2015 = 1.2
+f2020 = 1.2
 for k in 3:aqef.n_xps
     if k < aqef.n_xps
-        lines!(ax1, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+        lines!(ax1, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]))
     else
-        lines!(ax1, aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2015,
+        lines!(ax1, aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]))
     end
@@ -143,20 +143,20 @@ end
 
 for k in [1, 2, 7, 8, 9]
     if k < aqef.n_xps
-        lines!(ax2, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015,
+        lines!(ax2, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:end], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]))
     else
-        lines!(ax2, aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2015,
+        lines!(ax2, aqef.f[k][1:s:stiching_idx] ./ polar_amplification .+ f2020,
             aqef.V_sle[k][1:s:stiching_idx], linewidth = lws[k], label = xp_labels[k],
             color = lcolor(cycling_colors[k]))
     end
 end
 
 for axx in [ax2]
-    scatter!(axx, eql1.f ./ polar_amplification .+ f2015, eql1.V_sle;
+    scatter!(axx, eql1.f ./ polar_amplification .+ f2020, eql1.V_sle;
         color = :black, label = "EQL", markersize = ms1)
-    scatter!(axx, eql2.f ./ polar_amplification .+ f2015, eql2.V_sle;
+    scatter!(axx, eql2.f ./ polar_amplification .+ f2020, eql2.V_sle;
         color = :black, markersize = ms1)
 end
 

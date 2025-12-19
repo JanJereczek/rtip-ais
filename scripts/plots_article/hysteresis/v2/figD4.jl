@@ -2,10 +2,10 @@ include("../../../intro.jl")
 
 T = Float32
 polar_amplification = 1.8
-f2015 = 1.2
+f2020 = 1.2
 f_to = 0.25
 
-xp = datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow/0")
+xp = datadir("output/ais/v2/hyster/regrowth/aqef/refnomslow/0")
 file1D = joinpath(xp, "yelmo1D.nc")
 file2Dsm = joinpath(xp, "yelmo2Dsm.nc")
 file2D = joinpath(xp, "yelmo2D.nc")
@@ -13,25 +13,25 @@ file2D = joinpath(xp, "yelmo2D.nc")
 t1D = ncread(file1D, "time")
 t2Dsm = ncread(file2Dsm, "time")
 t2D = ncread(file2D, "time")
-f = ncread(file1D, "hyst_f_now") ./ polar_amplification .+ f2015
+f = ncread(file1D, "hyst_f_now") ./ polar_amplification .+ f2020
 x = ncread(file2Dsm, "xc")
 y = ncread(file2Dsm, "yc")
 # f_grnd = ncread(file2D, "f_grnd")
 X, Y = ndgrid(x, y)
 
 n_grz = 20       # number of plotted grounding zones
-di_grz = 1
+di_grz = 2
 dt_2D = mean(diff(t2D))
 dt_grz = di_grz .* dt_2D
-f_bif = 1.95
-i_bif = findlast(f .<= f_bif) + 3
+f_bif = 3.3
+i_bif = findlast(f .>= f_bif)
 t_bif = t1D[i_bif]
 t_end = t_bif .+ dt_grz .* n_grz
 i_2D = argmin(abs.(t_bif .- t2D))
 grz_steps = range(i_2D, step = di_grz, length = n_grz)
 
-xl = (-2000, 0)
-yl = (-1400, 600)
+xl = (-500, 400)
+yl = (400, 1300)
 
 mask(X, Y, xl, yl) = (xl[1] .<= X .<= xl[2]) .& (yl[1] .<= Y .<= yl[2])
 ase_mask = mask(X, Y, xl, yl)
@@ -66,19 +66,26 @@ mean_ocn_bmb = tot_ocn_bmb ./ cnt_ocnmlt
 mean_calving = tot_calving ./ cnt_calving
 
 set_theme!(theme_latexfonts())
-fs = 28
+fs = 32
 lw1, lw2 = 3, 6
-figA6 = Figure(size = (1550, 1050), fontsize = fs)
-ga = figA6[1, 1] = GridLayout()
+figD4 = Figure(size = (1550, 1050), fontsize = fs)
+ga = figD4[1, 1] = GridLayout()
 ax_bmb = Axis(ga[1, 1])
 ax_mbmb = Axis(ga[2, 1])
 ax_cnt = Axis(ga[3, 1])
-ylims!(ax_bmb, (-6.5e3, -4e2))
-ylims!(ax_mbmb, (-3.5, -0.5))
-ylims!(ax_cnt, (4e2, 4e3))
+# ylims!(ax_bmb, (-6.5e3, -4e2))
+# ylims!(ax_mbmb, (-3.5, -0.5))
+# ylims!(ax_cnt, (4e2, 4e3))
 ax_bmb.yscale = Makie.pseudolog10
 ax_cnt.yscale = Makie.pseudolog10
-ax_hm = Axis(figA6[1, 2:3], aspect = DataAspect())
+ax_hm = Axis(figD4[1, 2:3], aspect = DataAspect())
+inset_ax = Axis(figD4[1, 2:3], width = Relative(0.3), height = Relative(0.3),
+    halign = 0.98, valign = 0.98)
+hidedecorations!(inset_ax)
+heatmap!(inset_ax, x, y, ncslice(file2D, "z_bed", i_2D); cmaps["z_bed6"]...)
+contour!(inset_ax, x, y,
+    (xl[1] .< X .< xl[2]) .& (yl[1] .< Y .< yl[2]),
+    levels = [0.5], color = :red, linewidth = 5)
 
 catjet = cgrad(:jet, range(0, stop = 1, length = n_grz+1), categorical = true)
 tsjet = cgrad(:jet)
@@ -89,10 +96,10 @@ heatmap!(ax_hm, x, y, ncslice(file2D, "z_bed", k); cmaps["z_bed6"]...)
     grz_steps = range(k, step = di_grz, length = n_grz)
 for ax in [ax_bmb, ax_mbmb, ax_cnt]
     hlines!(ax, 0, color = :black, linewidth = lw1, linestyle = :dash)
-    vlines!(ax, t2D[grz_steps] ./ 1f3, color = [(c, 0.4) for c in catjet],
+    vlines!(ax, t2D[grz_steps][1:2:end] ./ 1f3, color = [(c, 0.4) for c in catjet],
         linewidth = 6)
 end
-for l in eachindex(grz_steps)
+for l in eachindex(grz_steps)[1:2:end]
     contour!(ax_hm, x, y,
         ncslice(file2D, "f_grnd", grz_steps[l]) .*
         (ncslice(file2D, "H_ice", grz_steps[l]) .> 100),
@@ -122,21 +129,30 @@ xlims!(ax_hm, xl)
 ylims!(ax_hm, yl)
 
 ax_cnt.xlabel = "Time (kyr)"
-axislegend(ax_mbmb, nbanks = 1, fontsize = fs, position = :rb)
-Colorbar(figA6[2, 2:3], label = "Bed elevation (km)", vertical = false,
+axislegend(ax_mbmb, nbanks = 1, fontsize = fs, position = :rc)
+Colorbar(figD4[2, 2:3], label = "Bed elevation (km)", vertical = false,
     width = Relative(0.5), height = Relative(1), ticks = latexifyticks(-1:1, 1e3),
     flipaxis = false; cmaps["z_bed6"]...)
 
-ax_bmb.yticks = [-500, -1000, -2000, -3500, -6000]
-ax_cnt.yticks = [200, 400, 600, 1e3, 1.8e3, 3e3]
+ax_bmb.yticks = [0, -1, -3, -10, -30, -100, -300]
+ax_cnt.yticks = [0, 1, 3, 10, 30, 100, 300]
 dc = 450
-colgap!(figA6.layout, 5)
-rowgap!(figA6.layout, 5)
-rowgap!(figA6.layout, 1, -40)
-rowsize!(figA6.layout, 1, dc*2)
-colsize!(figA6.layout, 1, dc)
-colsize!(figA6.layout, 2, dc)
-colsize!(figA6.layout, 3, dc)
-figA6
-save(plotsdir("v2/hysteresis/figA6.png"), figA6)
-save(plotsdir("v2/hysteresis/figA6.pdf"), figA6)
+colgap!(figD4.layout, 5)
+rowgap!(figD4.layout, 5)
+rowgap!(figD4.layout, 1, -60)
+rowsize!(figD4.layout, 1, dc*2)
+colsize!(figD4.layout, 1, dc)
+colsize!(figD4.layout, 2, dc)
+colsize!(figD4.layout, 3, dc)
+
+xlims!(ax_bmb, (500, 520))
+xlims!(ax_mbmb, (500, 520))
+xlims!(ax_cnt, (500, 520))
+text!(ax_bmb, 500.5, -3, text = "(a)", font = :bold)
+text!(ax_mbmb, 500.5, -1.5, text = "(b)", font = :bold)
+text!(ax_cnt, 500.5, 80, text = "(c)", font = :bold)
+text!(ax_hm, xl[1]+20, yl[2]-50, text = "(d)", font = :bold)
+
+figD4
+save(plotsdir("v2/hysteresis/figD4.png"), figD4)
+save(plotsdir("v2/hysteresis/figD4.pdf"), figD4)

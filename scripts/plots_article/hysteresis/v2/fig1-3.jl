@@ -27,7 +27,7 @@ cycling_colors = [xpcolors[l] for l in xp_labels]
 polar_amplification = 1.8
 f_to = 0.25
 xp_idx = aqef.n_xps
-f2015 = 1.2
+f2020 = 1.2
 
 ms1, ms2 = 10, 15
 s = 400
@@ -45,7 +45,6 @@ nx, ny = size(ncread(file2D, "x2D"))
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
 z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D, var_names_2D, 1)
 
-
 ###############################
 # Fig 1
 ###############################
@@ -55,7 +54,7 @@ fig1 = Figure(size=(1600, 800), fontsize = 24)
 ax = Axis(fig1[1, 1])
 large_misi = [1.95, 5.87, 6.95, 8.65]
 small_misi = [4.2, 6.21, 7.2, 7.6, 7.9, 9.2]
-perimeter = [9.7, 10.1]
+perimeter = [9.7, 10.05]
 shadings = [large_misi, small_misi, perimeter]
 colors = [:gray60, :gray60, :gray60]
 labels = ["Large MISI", "Small MISI", "Perimeter"]
@@ -87,7 +86,7 @@ for i in eachindex(bifurcation_data)
 end
 
 for k in 1:aqef.n_xps
-    lines!(ax, aqef.f[k][1:s:end] ./ polar_amplification .+ f2015, aqef.V_sle[k][1:s:end],
+    lines!(ax, aqef.f[k][1:s:end] ./ polar_amplification .+ f2020, aqef.V_sle[k][1:s:end],
         linewidth = lws[k], label = xp_labels[k], color = lcolor(cycling_colors[k]))
 end
 
@@ -95,10 +94,16 @@ idx = sortperm(eql.f)
 f = eql.f[idx]
 V_sle = eql.V_sle[idx]
 V_sle = filter_outliers(V_sle)
-scatter!(ax, f ./ polar_amplification .+ f2015, V_sle;
+scatter!(ax, f ./ polar_amplification .+ f2020, V_sle;
     color = xpcolors["EQL"], label = "EQL", markersize = ms1)
-
 axislegend(ax, position = :lb, nbanks = 1)
+
+# Compute mean diff between eql and ref
+aqef_itp = linear_interpolation(aqef.f[end] ./ polar_amplification .+ f2020, aqef.V_sle[end])
+aqef_eql = aqef_itp.(f ./ polar_amplification .+ f2020)
+mean_diff = mean(abs.(aqef_eql .- V_sle))
+println("Mean difference REF vs EQL: $(round(mean_diff, digits=2)) m SLE")
+lines(f, aqef_eql .- V_sle)
 
 ax.xticks = 0:1:10
 ax.xminorticks = 0:0.2:12
@@ -230,7 +235,7 @@ for i in axes(forcing_frames, 1), j in axes(forcing_frames, 2)
     forcing = forcing_frames[i, j]
 
     if heatmap_frames == "aqef"
-        i3 = findfirst(aqef.f[xp_idx] ./ polar_amplification .+ f2015 .>= forcing)
+        i3 = findfirst(aqef.f[xp_idx] ./ polar_amplification .+ f2020 .>= forcing)
         f_eq, V_eq = aqef.f[xp_idx][i3] ./ polar_amplification, aqef.V_sle[xp_idx][i3]
         frame_index = argmin(abs.(aqef.t_2D[xp_idx] .- aqef.t_1D[xp_idx][i3]))
         z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D, var_names_2D,
@@ -300,7 +305,7 @@ t1D = ncread(file1D, "time")
 t2Dsm = ncread(file2Dsm, "time")
 t2D = ncread(file2D, "time")
 dt_2D = mean(diff(t2D))
-f = aqef.f[end] ./ polar_amplification .+ f2015
+f = aqef.f[end] ./ polar_amplification .+ f2020
 
 n_grz = 7       # number of plotted grounding zones
 di_grz = [2, 4, 6, 4]
