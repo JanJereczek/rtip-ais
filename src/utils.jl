@@ -56,11 +56,11 @@ function load_ssps(scale; wrt = :pd)
     ssp3 = readdlm(datadir("processed/SSP/SSP3.csv"), ',')
     ssp5 = readdlm(datadir("processed/SSP/SSP5.csv"), ',')
     if wrt == :pd
-        f2015 = hist[end, 2]
-        view(ssp1, :, 2) .-= f2015
-        view(ssp2, :, 2) .-= f2015
-        view(ssp3, :, 2) .-= f2015
-        view(ssp5, :, 2) .-= f2015
+        f2020 = hist[end, 2]
+        view(ssp1, :, 2) .-= f2020
+        view(ssp2, :, 2) .-= f2020
+        view(ssp3, :, 2) .-= f2020
+        view(ssp5, :, 2) .-= f2020
     elseif wrt == :pi
         nothing
     else
