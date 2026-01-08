@@ -58,7 +58,7 @@ cycling_colors = [
 
 polar_amplification = 1.8
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 ssp126_2100 = 2.0
 ssp245_2100 = 3.0
 ssp370_2100 = 4.4
@@ -107,7 +107,7 @@ for k in 1:aqef.n_xps
     idx = uniqueidx(aqef.t_1D[k])
     lines!(
         ax1,
-        aqef.f[k][idx][1:s:end] ./ polar_amplification .+ f2015,
+        aqef.f[k][idx][1:s:end] ./ polar_amplification .+ f2020,
         aqef.V_sle[k][idx][1:s:end],
         linewidth = lws[k],
         label = xp_labels[k],
@@ -188,11 +188,11 @@ save(plotsdir("v2/rtip/btip.png"), fig)
 ####################################
 # Ax2
 #####################################
-m2_itp = linear_interpolation(aqef.f[1] ./ polar_amplification .+ f2015, aqef.V_sle[1])
-p2_itp = linear_interpolation(aqef.f[2] ./ polar_amplification .+ f2015, aqef.V_sle[2],
+m2_itp = linear_interpolation(aqef.f[1] ./ polar_amplification .+ f2020, aqef.V_sle[1])
+p2_itp = linear_interpolation(aqef.f[2] ./ polar_amplification .+ f2020, aqef.V_sle[2],
     extrapolation_bc = Inf)
-ref_itp = linear_interpolation(aqef.f[3] ./ polar_amplification .+ f2015, aqef.V_sle[3])
-f_common = f2015:0.01:12
+ref_itp = linear_interpolation(aqef.f[3] ./ polar_amplification .+ f2020, aqef.V_sle[3])
+f_common = f2020:0.01:12
 lines!(
     ax2,
     f_common,

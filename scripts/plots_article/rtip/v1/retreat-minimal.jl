@@ -31,7 +31,7 @@ end
 polar_amplification = 1.8
 f_to = 0.25
 xp_idx = aqef.n_xps
-f2015 = 1.2
+f2020 = 1.2
 
 cropx, cropy = 20, 35
 aratio = (381 - 2*cropx) / (381 - 2*cropy)
@@ -110,13 +110,13 @@ for i in eachindex(subregion_labels)
 end
 
 for k in 1:aqef.n_xps
-    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2015, aqef.V_sle[k][1:s:end],
+    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2020, aqef.V_sle[k][1:s:end],
         linewidth = lws[k], label = xp_labels[k], color = color = cycling_colors[k])
 end
 
 text!(axs[2, 1], 2300, 1800, text = "b", color = :white, fontsize = 30, font = :bold)
 
-scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2015, eql.V_sle;
+scatter!(axs[1, 1], eql.f ./ polar_amplification .+ f2020, eql.V_sle;
     color = :black, label = "Equilibrium", markersize = ms1)
 
 axislegend(axs[1, 1], position = :lb, nbanks = 1)

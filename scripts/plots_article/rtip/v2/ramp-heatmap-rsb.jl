@@ -89,7 +89,7 @@ end
 # Compute SSP slopes
 f_pd = 1.2
 f_to = 0.25
-f2015 = 1.2
+f2020 = 1.2
 polar_amplification = 1.8
 pa = polar_amplification
 ssps = load_ssps(polar_amplification; wrt = :pd)
