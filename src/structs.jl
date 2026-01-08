@@ -47,6 +47,7 @@ function masked_massbalance(file, t1, t2, mask; T = Float32)
     nt = length(time)
     bmb = zeros(nt)
     smb = zeros(nt)
+    cmb = zeros(nt)
     mb_net = zeros(nt)
     mb_resid = zeros(nt)
     for k in 1:nt
@@ -60,11 +61,13 @@ function masked_massbalance(file, t1, t2, mask; T = Float32)
         mb_net[k] = mean(ncslice(file, "mb_net", k + k_offset)[mask_applied])
         if occursin("sm", file)
             nothing
+            cmb[k] = mb_net[k] .- bmb[k] .- smb[k]
         else
             mb_resid[k] = mean(ncslice(file, "mb_resid", k + k_offset)[mask_applied])
+            cmb[k] = mean(ncslice(file, "cmb", k + k_offset)[mask_applied])
         end
     end
-    cmb = mb_net .- bmb .- smb
+    mb_net = bmb .+ smb .+ cmb
     return MaskedMassbalance(time, T.(bmb), T.(smb), T.(cmb), T.(mb_net), T.(mb_resid))
 end
 
