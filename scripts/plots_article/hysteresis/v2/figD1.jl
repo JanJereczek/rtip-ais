@@ -74,8 +74,8 @@ ax_bmb = Axis(ga[1, 1])
 ax_mbmb = Axis(ga[2, 1])
 ax_cnt = Axis(ga[3, 1])
 ylims!(ax_bmb, (-6.5e3, -4e2))
-ylims!(ax_mbmb, (-3.5, -0.5))
-ylims!(ax_cnt, (4e2, 4e3))
+ylims!(ax_mbmb, (-5, -0.5))
+ylims!(ax_cnt, (2e2, 4e3))
 ax_bmb.yscale = Makie.pseudolog10
 ax_cnt.yscale = Makie.pseudolog10
 ax_hm = Axis(figD1[1, 2:3], aspect = DataAspect())
@@ -89,8 +89,8 @@ heatmap!(ax_hm, x, y, ncslice(file2D, "z_bed", k); cmaps["z_bed6"]...)
     grz_steps = range(k, step = di_grz, length = n_grz)
 for ax in [ax_bmb, ax_mbmb, ax_cnt]
     hlines!(ax, 0, color = :black, linewidth = lw1, linestyle = :dash)
-    vlines!(ax, t2D[grz_steps] ./ 1f3, color = [(c, 0.4) for c in catjet],
-        linewidth = 6)
+    vlines!(ax, t2D[grz_steps] ./ 1f3, color = [(c, 1) for c in catjet],
+        linewidth = lw1, linestyle = :dash)
 end
 for l in eachindex(grz_steps)
     contour!(ax_hm, x, y,
@@ -101,16 +101,19 @@ end
 
 lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_ocn_bmb, linewidth = lw2)
 lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_grline_bmb, linewidth = lw2)
-lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_ocn_bmb, linewidth = lw2, label = "shelf")
-lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_grline_bmb, linewidth = lw2, label = "gr. zone")
+lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_calving, linewidth = lw2, color = :gray60)
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_ocn_bmb, linewidth = lw2, label = "basal, shelf")
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_calving, linewidth = lw2, label = "calving", color = :gray60)
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_grline_bmb, linewidth = lw2, label = "basal, GZ")
 lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_ocnmlt, linewidth = lw2)
 lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_grline, linewidth = lw2)
+lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_calving, linewidth = lw2, color = :gray60)
 # lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_calving, linewidth = lw2)
 # lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_calving, linewidth = lw2, label = "calving")
 # lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_calving, linewidth = lw2)
 
-ax_bmb.ylabel = L"Total BMB ($\mathrm{m \, yr^{-1}}$)"
-ax_mbmb.ylabel = L"Mean BMB ($\mathrm{m \, yr^{-1}}$)"
+ax_bmb.ylabel = L"Total MB ($\mathrm{m \, yr^{-1}}$)"
+ax_mbmb.ylabel = L"Mean MB ($\mathrm{m \, yr^{-1}}$)"
 ax_cnt.ylabel = "Cell count (1)"
 ax_bmb.xticklabelsvisible = false
 ax_mbmb.xticklabelsvisible = false
@@ -122,13 +125,20 @@ xlims!(ax_hm, xl)
 ylims!(ax_hm, yl)
 
 ax_cnt.xlabel = "Time (kyr)"
-axislegend(ax_mbmb, nbanks = 1, fontsize = fs, position = :rb)
-Colorbar(figD1[2, 2:3], label = "Bed elevation (km)", vertical = false,
+Legend(figD1[2, 2:3], ax_mbmb, nbanks = 2, halign = 0.05, valign = 0.95)
+Colorbar(figD1[2, 2:3], label = "Bed elevation (km)", vertical = false, halign = :right,
     width = Relative(0.5), height = Relative(1), ticks = latexifyticks(-1:1, 1e3),
     flipaxis = false; cmaps["z_bed6"]...)
 
 ax_bmb.yticks = [-500, -1000, -2000, -3500, -6000]
-ax_cnt.yticks = [200, 400, 600, 1e3, 1.8e3, 3e3]
+ax_mbmb.yticks = -1:-1:-5
+ax_cnt.yticks = [200, 400, 800, 1600, 3200]
+ax_bmb.yminorticks = IntervalsBetween(2)
+ax_mbmb.yminorticks = IntervalsBetween(2)
+ax_cnt.yminorticks = IntervalsBetween(2)
+ax_bmb.yminorticksvisible = true
+ax_mbmb.yminorticksvisible = true
+ax_cnt.yminorticksvisible = true
 dc = 450
 colgap!(figD1.layout, 5)
 rowgap!(figD1.layout, 5)

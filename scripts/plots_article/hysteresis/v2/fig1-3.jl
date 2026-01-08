@@ -129,10 +129,11 @@ YY = Y[ii, jj]
 regions = [
     ("WAIS", (-1300, -300), 0, :black),
     ("EAIS", (900, -900), 0, :black),
-    ("Peninsula", (-2400, 1500), -π/5, :black),
 ]
 subregions = [
+    ("Antarctic \n Peninsula", (-2400, 1500), -π/5, :black),
     ("Amundsen", (-1600, -100), -π/3, :white),
+    ("Siple Coast", (-700, -950), π/4, :white),
     ("Ross", (-200, -1100), 0, :white),
     ("Filchner- \n Ronne", (-1400, 400), 0, :white),
     ("Wilkes \n Basin", (700, -1950), 0, :black),
@@ -196,12 +197,13 @@ Legend(fig1[2, 2], [elem_1, elem_2], ["Modelled", "Observed"], label = "Groundin
 
 text!(ax, 10.2, 56, color = :black, font = :bold, text="(a)", fontsize = 30)
 text!(axmap, -2600, 2150, color = :black, font = :bold, text="(b)", fontsize = 30)
-fig1
 colsize!(fig1.layout, 1, 740)
 colsize!(fig1.layout, 2, 800)
 rowsize!(fig1.layout, 2, 50)
 rowgap!(fig1.layout, 1, -70)
 colgap!(fig1.layout, 1, -30)
+fig1
+
 save(plotsdir("v2/hysteresis/fig1.png"), fig1)
 save(plotsdir("v2/hysteresis/fig1.pdf"), fig1)
 
@@ -318,7 +320,7 @@ t_end = t_bif .+ dt_grz .* n_grz
 
 mask(X, Y, xl, yl) = (xl[1] .<= X .<= xl[2]) .& (yl[1] .<= Y .<= yl[2])
 masks = [ mask(X, Y, xl[i], yl[i]) for i in 1:n_tra ]
-mbs = [ masked_massbalance(file2Dsm, t_bif[i]- dt_2D, t_end[i], masks[i]) for i in 1:n_tra ]
+mbs = [ masked_massbalance(file2D, t_bif[i]- dt_2D, t_end[i], masks[i]) for i in 1:n_tra ]
 
 img = FileIO.load(datadir("processed/transects-v2.png"))
 rgba2gray_smooth(x) = x.r + x.g + x.b
@@ -327,7 +329,7 @@ mask_vals = sort(unique(img))
 mask_order = [2, 3, 4, 5]
 mask_transects = rotr90(img)
 transect_begin = [:left, :bottom, :left, :right]
-region_labels = ["Amundsen", "Wikes", "Recovery", "Aurora"]
+region_labels = ["Amundsen", "Wilkes", "Recovery", "Aurora"]
 
 fs = 20
 lw1 = 3
@@ -343,7 +345,7 @@ tr_color = :black   # :magenta
 
 for i in eachindex(i_bif)
 
-    axs_ts[i].ylabel = "Regional mass balance (m/yr)"
+    axs_ts[i].ylabel = "Regional mean MB (m/yr)"
 
     hideydecorations!(axs_hm[i])
     axs_hm[i].xticksvisible = false
@@ -365,8 +367,8 @@ for i in eachindex(i_bif)
     k = argmin(abs.(t .- t2D))
     heatmap!(axs_hm[i], xc, yc, ncslice(file2D, "z_bed", k); cmaps["z_bed6"]...)
         grz_steps = range(k, step = di_grz[i], length = n_grz)
-    vlines!(axs_ts[i], t2D[grz_steps] ./ 1f3, color = [(c, 0.3) for c in catjet],
-        linewidth = 6)
+    vlines!(axs_ts[i], t2D[grz_steps] ./ 1f3, color = [(c, 1) for c in catjet],
+        linewidth = 2, linestyle = :dash)
     hlines!(axs_ts[i], 0, color = :black, linewidth = lw1, linestyle = :dash)
     lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].bmb, linewidth = lw2,
         label = "basal")
@@ -379,7 +381,8 @@ for i in eachindex(i_bif)
         label = "net",
         # color = mbs[i].time, colormap = tsjet,
         linewidth = lw2)
-
+    lines!(axs_ts[i], mbs[i].time ./ 1f3, mbs[i].cmb, linewidth = lw2,
+        color = :gray60, label = "calving")
     tr_mask = mask_transects .== mask_vals[mask_order[i]]
     ordered_idx, rt = indices_from_mask(tr_mask, X, Y, transect_begin[i])
     ii = [extract_idx(ordered_idx[i])[1] for i in 1:length(ordered_idx)]

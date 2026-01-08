@@ -98,8 +98,8 @@ heatmap!(ax_hm, x, y, ncslice(file2D, "z_bed", k); cmaps["z_bed6"]...)
     grz_steps = range(k, step = di_grz, length = n_grz)
 for ax in [ax_bmb, ax_mbmb, ax_cnt]
     hlines!(ax, 0, color = :black, linewidth = lw1, linestyle = :dash)
-    vlines!(ax, t2D[grz_steps][1:2:end] ./ 1f3, color = [(c, 0.4) for c in catjet],
-        linewidth = 6)
+    vlines!(ax, t2D[grz_steps][1:2:end] ./ 1f3, color = [(c, 1) for c in catjet],
+        linewidth = 3, linestyle = :dash)
 end
 for l in eachindex(grz_steps)[1:2:end]
     contour!(ax_hm, x, y,
@@ -110,16 +110,19 @@ end
 
 lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_ocn_bmb, linewidth = lw2)
 lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_grline_bmb, linewidth = lw2)
-lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_ocn_bmb, linewidth = lw2, label = "shelf")
-lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_grline_bmb, linewidth = lw2, label = "gr. zone")
+lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_calving, linewidth = lw2, color = :gray60)
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_ocn_bmb, linewidth = lw2, label = "basal, shelf")
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_calving, linewidth = lw2, label = "calving", color = :gray60)
+lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_grline_bmb, linewidth = lw2, label = "basal, GZ")
 lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_ocnmlt, linewidth = lw2)
 lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_grline, linewidth = lw2)
+lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_calving, linewidth = lw2, color = :gray60)
 # lines!(ax_bmb, t2D[grz_steps] ./ 1f3, tot_calving, linewidth = lw2)
 # lines!(ax_mbmb, t2D[grz_steps] ./ 1f3, mean_calving, linewidth = lw2, label = "calving")
 # lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_calving, linewidth = lw2)
 
-ax_bmb.ylabel = L"Total BMB ($\mathrm{m \, yr^{-1}}$)"
-ax_mbmb.ylabel = L"Mean BMB ($\mathrm{m \, yr^{-1}}$)"
+ax_bmb.ylabel = L"Total MB ($\mathrm{m \, yr^{-1}}$)"
+ax_mbmb.ylabel = L"Mean MB ($\mathrm{m \, yr^{-1}}$)"
 ax_cnt.ylabel = "Cell count (1)"
 ax_bmb.xticklabelsvisible = false
 ax_mbmb.xticklabelsvisible = false
@@ -131,13 +134,20 @@ xlims!(ax_hm, xl)
 ylims!(ax_hm, yl)
 
 ax_cnt.xlabel = "Time (kyr)"
-axislegend(ax_mbmb, nbanks = 1, fontsize = fs, position = :rc)
+# axislegend(ax_mbmb, nbanks = 1, fontsize = fs, position = :rc)
 Colorbar(fig8[2, 2:3], label = "Bed elevation (km)", vertical = false,
-    width = Relative(0.5), height = Relative(1), ticks = latexifyticks(-1:1, 1e3),
+    width = Relative(0.5), height = Relative(1), ticks = latexifyticks(-1:1, 1e3), halign = :right,
     flipaxis = false; cmaps["z_bed6"]...)
+Legend(fig8[2, 2:3], ax_mbmb, nbanks = 2, halign = 0.05, valign = 0.95)
 
 ax_bmb.yticks = [0, -1, -3, -10, -30, -100, -300]
 ax_cnt.yticks = [0, 1, 3, 10, 30, 100, 300]
+ax_bmb.yminorticks = IntervalsBetween(2)
+ax_mbmb.yminorticks = IntervalsBetween(2)
+ax_cnt.yminorticks = IntervalsBetween(2)
+ax_bmb.yminorticksvisible = true
+ax_mbmb.yminorticksvisible = true
+ax_cnt.yminorticksvisible = true
 dc = 450
 colgap!(fig8.layout, 5)
 rowgap!(fig8.layout, 5)
@@ -150,9 +160,9 @@ colsize!(fig8.layout, 3, dc)
 xlims!(ax_bmb, (568, 587))
 xlims!(ax_mbmb, (568, 587))
 xlims!(ax_cnt, (568, 587))
-text!(ax_bmb, 568.2, -30, text = "(a)", font = :bold)
-text!(ax_mbmb, 568.2, -3, text = "(b)", font = :bold)
-text!(ax_cnt, 568.2, 3, text = "(c)", font = :bold)
+text!(ax_bmb, 568.4, -30, text = "(a)", font = :bold)
+text!(ax_mbmb, 568.4, -3, text = "(b)", font = :bold)
+text!(ax_cnt, 568.4, 3, text = "(c)", font = :bold)
 text!(ax_hm, xl[1]+20, yl[2]-50, text = "(d)", font = :bold)
 
 fig8
