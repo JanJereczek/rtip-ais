@@ -3,6 +3,9 @@ include("../intro.jl")
 function anim_aqef_1panel(xp_type, xp, k1, k2)
     if xp_type == "retreat"
         dir = datadir("output/ais/v2/hyster/$xp_type/aqef/minvisc/$xp/0")
+    elseif xp_type == "regrowth" && occursin("restarted", xp)
+        dir = datadir("output/ais/v2/hyster/$xp_type/aqef/minvisc/$xp/0")
+        @show dir
     else
         dir = datadir("output/ais/v2/hyster/$xp_type/aqef/$xp/0")
     end
@@ -16,7 +19,7 @@ function anim_aqef_1panel(xp_type, xp, k1, k2)
     tol = 1e-8
     f_to = 0.25
     f_pa = 1.8
-    f2015 = 1.2
+    f2020 = 1.2
 
     time_1D = ncread(file1D, "time")
     dt_1D = time_1D[2] - time_1D[1]
@@ -48,7 +51,7 @@ function anim_aqef_1panel(xp_type, xp, k1, k2)
     lin_uxy_s_obs = @lift(uxy_s[:, :, $k])
     time_1D_obs = @lift(time_1D[1:$k_1D] ./ 1e3)
     hyst_f_now_obs = @lift(hyst_f_now[1:$k_1D] .* f_to)
-    hyst_f_now_scalar_obs = @lift("GMT anomaly = $(round(f2015 + (hyst_f_now[$k_1D] ./ f_pa),
+    hyst_f_now_scalar_obs = @lift("GMT anomaly = $(round(f2020 + (hyst_f_now[$k_1D] ./ f_pa),
         digits = 3)) K")
 
     set_theme!(theme_latexfonts())
@@ -95,9 +98,10 @@ data = [
     # ("retreat", "atm", 1, 1000),
     # ("retreat", "ocn", 1, nothing),
     # ("regrowth", "refnomslow", 100, nothing),
-    ("regrowth", "dpr", 100, nothing),
-    ("regrowth", "atm", 100, nothing),
-    ("regrowth", "upl", 100, nothing),
+    # ("regrowth", "dpr", 100, nothing),
+    # ("regrowth", "atm", 100, nothing),
+    # ("regrowth", "upl", 100, nothing),
+    ("regrowth", "refnomslow-restarted", 1, nothing),
 ]
 
 for xp_data in data

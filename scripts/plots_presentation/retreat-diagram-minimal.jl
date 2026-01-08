@@ -25,7 +25,7 @@ cycling_colors = [:royalblue, :orange, :black]
 polar_amplification = 1.8
 f_to = 0.25
 xp_idx = aqef.n_xps
-f2015 = 1.2
+f2020 = 1.2
 
 set_theme!(theme_latexfonts())
 fig = Figure(size=(500, 400), fontsize = 18)
@@ -45,10 +45,10 @@ if shading
     shade_large_misi = [(1.2, 1.3), (4.7, 4.8), (6.1, 6.2), (7.0, 7.1), (7.8, 7.9)]
     for i in eachindex(shade_large_misi)
         if i == 1
-            vlines!(axs[1, 1], (shade_large_misi[i][1]:0.01:shade_large_misi[i][2]) .+ f2015,
+            vlines!(axs[1, 1], (shade_large_misi[i][1]:0.01:shade_large_misi[i][2]) .+ f2020,
                 alpha = large_misi_alpha, color = large_misi_color, label = "Large MISI")
         else
-            vlines!(axs[1, 1], (shade_large_misi[i][1]:0.01:shade_large_misi[i][2]) .+ f2015,
+            vlines!(axs[1, 1], (shade_large_misi[i][1]:0.01:shade_large_misi[i][2]) .+ f2020,
                 alpha = large_misi_alpha, color = large_misi_color)
         end
     end
@@ -83,7 +83,7 @@ else
 end
 
 for k in exp2plot
-    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2015, aqef.V_sle[k][1:s:end],
+    lines!(axs[1, 1], aqef.f[k][1:s:end] ./ polar_amplification .+ f2020, aqef.V_sle[k][1:s:end],
         linewidth = lws[k], label = xp_labels[k], color = color = cycling_colors[k])
 end
 
