@@ -4,14 +4,20 @@ T = Float32
 dir = datadir("output/ais/v2/hyster/retreat/aqef/minvisc")
 xps = [
     "$dir/refm2slow",
+    "$dir/refm1slow",
+    "$dir/refp1slow",
     "$dir/refp2slow",
+    "$dir/refp2slow-restarted",
     "$dir/refnomslow",
 ]
 
 xp_labels = [
     L"$-2 \, \sigma$",
+    L"$-1 \, \sigma$",
+    L"$+1 \, \sigma$",
     L"$+2 \, \sigma$",
-    "REF",
+    nothing,
+    L"$0 \, \sigma$",
 ]
 aqef = AQEFResults(T, xps)
 
@@ -46,29 +52,21 @@ for i in 1:3
     smooth_grline!(mask_ref)
 end
 
-lw1, lw2, lw3 = 5, 5, 7
+lw1, lw2, lw3 = 2, 3, 3
 ms1, ms2 = 15, 20
 lws = vcat(fill(lw2, aqef.n_xps - 1), [lw3])
-cols = cgrad(:jet, range(0, stop = 1, length = 6), categorical = true)
 cycling_colors = [
-    cols[5],
-    cols[1],
-    cols[3],
+    viscmap[1],
+    viscmap[2],
+    viscmap[4],
+    viscmap[5],
+    viscmap[5],
+    viscmap[3],
 ]
-
-polar_amplification = 1.8
-f_to = 0.25
-f2020 = 1.2
-ssp126_2100 = 2.0
-ssp245_2100 = 3.0
-ssp370_2100 = 4.4
-ssp585_2100 = 5.4
-ssp2100 = [ssp126_2100, ssp245_2100, ssp370_2100, ssp585_2100]
-ssp_labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
 
 s = 50
 uniqueidx(v) = unique(i -> v[i], eachindex(v))
-file2D = joinpath(aqef.xps[3], "0", "yelmo2D.nc")
+file2D = joinpath(aqef.xps[4], "0", "yelmo2D.nc")
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
 X = ncread(file2D, "x2D")
 Y = ncread(file2D, "y2D")
@@ -93,16 +91,18 @@ ax3 = Axis(fig[2, 1], aspect = DataAspect()) #AxisAspect(aratio)
 # Ax1
 #####################################
 f_gmt_bif = [1.98, 5.87, 7.1, 8.0, 8.65]
-shade = [(1.9, 2.0), (5.85, 5.95), (6.8, 7.1), (8.6, 8.7)]
+shade = [(1.9, 2.0), (5.85, 5.95), (6.8, 7.1), (7.85, 7.95), (8.6, 8.7)]
 for i in eachindex(shade)
     vlines!(ax1, (shade[i][1]:0.01:shade[i][2]), alpha = 0.2, color = :gray70)
 end
 vlines!(ax1, 1f6, color = :gray70, label = "Bifurcation", linewidth = 5) 
-text!(ax1, 1.9, 20, text = "WAIS", rotation = π/2)
-text!(ax1, 5.8, 20, text = "WSB", rotation = π/2)
-text!(ax1, 6.9, 20, text = "RSB", rotation = π/2)
-text!(ax1, 9.3, 20, text = "ASB", rotation = π/2)
+text!(ax1, 1.9, 40, text = "WAIS", rotation = π/2)
+text!(ax1, 5.8, 25, text = "WSB", rotation = π/2)
+text!(ax1, 6.8, 20, text = "RSB", rotation = π/2)
+text!(ax1, 7.8, 6, text = "ASB ext.", rotation = π/2)
+text!(ax1, 9.3, 20, text = "ASB int.", rotation = π/2)
 
+V_bif = [54, 42, 31, 20, 13]
 for k in 1:aqef.n_xps
     idx = uniqueidx(aqef.t_1D[k])
     lines!(
@@ -113,7 +113,12 @@ for k in 1:aqef.n_xps
         label = xp_labels[k],
         color = cycling_colors[k],
     )
+    i_bif = [findlast(aqef.V_sle[k][idx] .> V_bif[i]) for i in eachindex(V_bif)]
+    i_bif[i_bif .== nothing] .= length(aqef.V_sle[k][idx])
+    f_rtip = [aqef.f[k][idx][i_bif[i]] for i in eachindex(i_bif)]
+    @show f_rtip
 end
+
 text!(ax1, 11.2, 55, text = "a", color = :grey10, fontsize = 30, font = :bold)
 ax1.xticks = 0:2:12
 ax1.xminorticks = 0:0.2:12
@@ -148,9 +153,9 @@ hidedecorations!(ax3)
 heatmap!(ax3, xc, yc, z_bed; cmaps["z_bed2"]...)
 heatmap!(ax3, xc, yc, z_srf .* f_ice; cmaps["z_srf"]...)
 contour!(ax3, xc, yc, f_grnd .+ f_ice, levels = [1.9],
-    color = :red, linewidth = 2)
+    color = :red, linewidth = lw1)
 contour!(ax3, xc, yc, mask_ref .== 2, levels = [0.5],
-    color = :orange, linewidth = 2)
+    color = :orange, linewidth = lw1)
 xlims!(ax3, extrema(XX))
 ylims!(ax3, extrema(YY))
 
@@ -169,8 +174,8 @@ Colorbar(fig[2, 0], vertical = true, height = Relative(relheight), flipaxis = fa
 Colorbar(fig[2, 2], vertical = true, height = Relative(relheight),
     label = "Ice surface elevation (km)",
     ticks = (vcat([1], 1000:1000:4000), latexify.(0:4)); cmaps["z_srf"]...)
-l1 = LineElement(color = :orange, linewidth = 2)
-l2 = LineElement(color = :red, linewidth = 2)
+l1 = LineElement(color = :orange, linewidth = lw1)
+l2 = LineElement(color = :red, linewidth = lw1)
 Legend(fig[3, :], [l1, l2], ["Observed", "Modelled grounding line"],
     nbanks = 2, valign = :bottom)
 
@@ -181,41 +186,6 @@ rowgap!(fig.layout, 5)
 colgap!(fig.layout, 5)
 colgap!(fig.layout, 1, -60)
 rowsize!(fig.layout, 3, 40)
+fig
+
 save(plotsdir("v2/rtip/btip.png"), fig)
-
-
-#=
-####################################
-# Ax2
-#####################################
-m2_itp = linear_interpolation(aqef.f[1] ./ polar_amplification .+ f2020, aqef.V_sle[1])
-p2_itp = linear_interpolation(aqef.f[2] ./ polar_amplification .+ f2020, aqef.V_sle[2],
-    extrapolation_bc = Inf)
-ref_itp = linear_interpolation(aqef.f[3] ./ polar_amplification .+ f2020, aqef.V_sle[3])
-f_common = f2020:0.01:12
-lines!(
-    ax2,
-    f_common,
-    m2_itp.(f_common) .- ref_itp.(f_common),
-    label = L"$-2 \, \sigma$",
-    linewidth = 2,
-    color = cycling_colors[1],
-)
-lines!(
-    ax2,
-    f_common,
-    p2_itp.(f_common) .- ref_itp.(f_common),
-    label = L"$+2 \, \sigma$",
-    linewidth = 2,
-    color = cycling_colors[2],
-)
-xlims!(ax2, 0, 12)
-ax2.yticks = -6:2:6
-ax2.yminorticks = -6:0.5:6
-ax2.xticks = 0:2:12
-ax2.xminorticks = 0:0.2:12
-ax2.xminorgridvisible = true
-ax2.yminorgridvisible = true
-ax2.xlabel = L"GMT anomaly $f$ (K)"
-ax2.ylabel = L"Volume difference $ΔV$ (m SLE)"
-=#

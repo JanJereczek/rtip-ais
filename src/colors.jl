@@ -79,3 +79,6 @@ cmaps = Dict(
     "dz_bed" => (colormap = cgrad([:darkblue, :white, :darkred], range(0, stop = 1, length = 11),
         categorical = true), colorrange = (-1000, 1000), lowclip = :darkblue, highclip = :darkred),
 )
+
+visc_colors = [:darkred, :darkorange, :green, :royalblue, :midnightblue]
+viscmap = cgrad(visc_colors, range(0, stop = 1, length = 6), categorical = true)

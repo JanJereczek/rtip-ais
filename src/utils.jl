@@ -83,6 +83,17 @@ function shade_transitions!(axs, shade, offset, alpha, color)
     end
 end
 
+uniqueidx(v) = unique(i -> v[i], eachindex(v))
+
+function missingselect(x, i)
+    if isnothing(i)
+        return missing
+    elseif i == length(x)
+        return missing
+    else
+        return x[i]
+    end
+end
 
 function smooth_grline!(mask)
     for I in CartesianIndices(mask)
@@ -128,6 +139,17 @@ end
 ncslice(file, var, idx) = dropdims(
     ncread(file, var, start = [1, 1, idx], count = [-1, -1, 1]), dims = 3)
 
+function skipmissingmin(x, y)
+    if ismissing(x) && ismissing(y)
+        return missing
+    elseif ismissing(x)
+        return y
+    elseif ismissing(y)
+        return x
+    else
+        return min(x, y)
+    end
+end
 
 # struct StichedData1D{T}
 #     files::Vector{String}

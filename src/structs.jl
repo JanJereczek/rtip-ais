@@ -110,3 +110,221 @@ function hm!(ax, eql::EquilResults, f; kwargs...)
     contour!(ax, f_grnd .+ f_ice, levels = [1.9], color = :red, linewidth = 2)
     return nothing
 end
+
+
+mutable struct HeatmapRtip{T}
+    visc_cases::Vector{String}
+    n_visc_cases::Int
+    f::Vector{Vector{T}}
+    rtime::Vector{Vector{T}}
+    V::Vector{Vector{T}}
+    t_end::Vector{Vector{T}}
+    paths::Vector{Vector{String}}
+end
+
+function HeatmapRtip{T}(visc_cases::Vector{String}) where T
+    n_visc_cases = length(visc_cases)
+    f = [ T[] for _ in 1:n_visc_cases ]
+    rtime = [ T[] for _ in 1:n_visc_cases ]
+    V = [ T[] for _ in 1:n_visc_cases ]
+    t_end = [ T[] for _ in 1:n_visc_cases ]
+    paths = [ String[] for _ in 1:n_visc_cases ]
+    return HeatmapRtip(visc_cases, n_visc_cases, f, rtime, V, t_end, paths)
+end
+
+function aggregate_xp!(hr::HeatmapRtip, dir::String)
+
+    (;visc_cases, f, rtime, V, t_end, paths) = hr
+    params = readdlm(joinpath(dir, "info.txt"))
+    i_dirs = findfirst(params[1, :] .== "runid")
+    i_rtime = findfirst(params[1, :] .== "hyster.dt_ramp")
+    i_f_max = findfirst(params[1, :] .== "hyster.f_max")
+    i_visc_case = findfirst(params[1, :] .== "isos.viscosity_scaling_method")
+    i_scale = findfirst(params[1, :] .== "isos.viscosity_scaling")
+    n_files = size(params, 1) - 1
+
+    for j in 1:n_files
+        file = joinpath(dir, "$(params[j + 1, i_dirs])", "yelmo1D.nc")
+        visc_case = params[j + 1, i_visc_case]
+
+        if visc_case == "stddev"
+            if params[j + 1, i_scale] == -2.0
+                visc_case = "m2stddev"
+            elseif params[j + 1, i_scale] == -1.0
+                visc_case = "m1stddev"
+            elseif params[j + 1, i_scale] == 0.0
+                visc_case = "nominal"
+            elseif params[j + 1, i_scale] == 1.0
+                visc_case = "p1stddev"
+            elseif params[j + 1, i_scale] == 2.0
+                visc_case = "p2stddev"
+            end
+        end
+        i = findfirst(visc_cases .== visc_case)
+
+        t_e = ncread(file, "time")[end]
+        if (t_e > 10 && i !== nothing)
+            push!(t_end[i], t_e)
+            push!(f[i], params[j + 1, i_f_max])
+            push!(rtime[i], params[j + 1, i_rtime])
+            push!(V[i], ncread(file, "V_sle")[end])
+            push!(paths[i], joinpath(dir, "$(params[j + 1, i_dirs])"))
+        end
+    end
+end
+
+function get_rtime_idx(rtime)
+    rtime_vals = reverse(unique(rtime))
+    rtime_idx = similar(rtime, Int)
+    for i in eachindex(rtime_vals)
+        inds = findall(rtime .== rtime_vals[i])
+        for ind in inds
+            rtime_idx[ind] = i
+        end
+    end
+    return rtime_idx
+end
+
+
+mutable struct HeatmapRtipRate{T}
+    visc_cases::Vector{String}
+    n_visc_cases::Int
+    f::Vector{Vector{T}}
+    dfdt::Vector{Vector{T}}
+    V::Vector{Vector{T}}
+    t_end::Vector{Vector{T}}
+    paths::Vector{Vector{String}}
+end
+
+function HeatmapRtipRate{T}(visc_cases::Vector{String}) where T
+    n_visc_cases = length(visc_cases)
+    f = [ T[] for _ in 1:n_visc_cases ]
+    dfdt = [ T[] for _ in 1:n_visc_cases ]
+    V = [ T[] for _ in 1:n_visc_cases ]
+    t_end = [ T[] for _ in 1:n_visc_cases ]
+    paths = [ String[] for _ in 1:n_visc_cases ]
+    return HeatmapRtipRate(visc_cases, n_visc_cases, f, dfdt, V, t_end, paths)
+end
+
+function aggregate_xp!(hr::HeatmapRtipRate, dir::String)
+
+    (;visc_cases, f, dfdt, V, t_end, paths) = hr
+    params = readdlm(joinpath(dir, "info.txt"))
+    i_dirs = findfirst(params[1, :] .== "runid")
+    i_df_dt_max = findfirst(params[1, :] .== "hyster.df_dt_max")
+    i_f_max = findfirst(params[1, :] .== "hyster.f_max")
+    i_visc_case = findfirst(params[1, :] .== "isos.viscosity_scaling_method")
+    i_scale = findfirst(params[1, :] .== "isos.viscosity_scaling")
+    n_files = size(params, 1) - 1
+
+    for j in 1:n_files
+        file = joinpath(dir, "$(params[j + 1, i_dirs])", "yelmo1D.nc")
+        # @show file
+        visc_case = params[j + 1, i_visc_case]
+
+        if visc_case == "stddev"
+            if params[j + 1, i_scale] == -2.0
+                visc_case = "m2stddev"
+            elseif params[j + 1, i_scale] == -1.0
+                visc_case = "m1stddev"
+            elseif params[j + 1, i_scale] == 0.0
+                visc_case = "nominal"
+            elseif params[j + 1, i_scale] == 1.0
+                visc_case = "p1stddev"
+            elseif params[j + 1, i_scale] == 2.0
+                visc_case = "p2stddev"
+            end
+        end
+        i = findfirst(visc_cases .== visc_case)
+
+        t_e = ncread(file, "time")[end]
+        if (t_e > 10 && i !== nothing)
+            push!(t_end[i], t_e)
+            push!(f[i], params[j + 1, i_f_max])
+            push!(dfdt[i], params[j + 1, i_df_dt_max])
+            push!(V[i], ncread(file, "V_sle")[end])
+            push!(paths[i], joinpath(dir, "$(params[j + 1, i_dirs])"))
+        end
+    end
+end
+
+function get_dfdt_idx(dfdt)
+    dfdt_vals = reverse(unique(dfdt))
+    dfdt_idx = similar(dfdt, Int)
+    for i in eachindex(dfdt_vals)
+        inds = findall(dfdt .== dfdt_vals[i])
+        for ind in inds
+            dfdt_idx[ind] = i
+        end
+    end
+    return dfdt_idx
+end
+
+mutable struct StepRtip{T}
+    visc_cases::Vector{String}
+    n_visc_cases::Int
+    f::Vector{Vector{T}}
+    V::Vector{Vector{T}}
+    t_end::Vector{Vector{T}}
+    files::Vector{Vector{String}}
+end
+
+function StepRtip{T}(visc_cases::Vector{String}) where T
+    n_visc_cases = length(visc_cases)
+    f = [ T[] for _ in 1:n_visc_cases ]
+    V = [ T[] for _ in 1:n_visc_cases ]
+    t_end = [ T[] for _ in 1:n_visc_cases ]
+    files = [ String[] for _ in 1:n_visc_cases ]
+    return StepRtip(visc_cases, n_visc_cases, f, V, t_end, files)
+end
+
+
+function aggregate_xp!(sr::StepRtip, dir)
+    (;visc_cases, f, V, t_end) = sr
+    params = readdlm(joinpath(dir, "info.txt"))
+    i_dirs = findfirst(params[1, :] .== "rundir")
+    i_f_max = findfirst(params[1, :] .== "hyster.f_max")
+    i_visc_case = findfirst(params[1, :] .== "isos.viscosity_scaling_method")
+    i_df_dt_max = findfirst(params[1, :] .== "hyster.df_dt_max")
+    i_scale = findfirst(params[1, :] .== "isos.viscosity_scaling")
+    n_files = size(params, 1) - 1
+
+    for j in 1:n_files
+        file = joinpath(dir, "$(params[j + 1, i_dirs])", "yelmo1D.nc")
+        visc_case = params[j + 1, i_visc_case]
+
+        if visc_case == "stddev"
+            if params[j + 1, i_scale] == -2.0
+                visc_case = "m2stddev"
+            elseif params[j + 1, i_scale] == -1.0
+                visc_case = "m1stddev"
+            elseif params[j + 1, i_scale] == 0.0
+                visc_case = "nominal"
+            elseif params[j + 1, i_scale] == 1.0
+                visc_case = "p1stddev"
+            elseif params[j + 1, i_scale] == 2.0
+                visc_case = "p2stddev"
+            end
+        end
+        i = findfirst(visc_cases .== visc_case)
+
+        t_e = ncread(file, "time")[end]
+        if (t_e > 1_000) && (i !== nothing) && (params[j + 1, i_df_dt_max] > 0.5)
+            push!(t_end[i], t_e)
+            push!(f[i], params[j + 1, i_f_max] / polar_amplification + f2020)
+            V[i] = vcat(V[i], ncread(file, "V_sle")[end])
+            push!(sr.files[i], file)
+        end
+    end
+end
+
+function Base.sort!(sr::StepRtip{T}) where T
+    for i in 1:sr.n_visc_cases
+        idx = sortperm(sr.f[i])
+        sr.f[i] = sr.f[i][idx]
+        sr.V[i] = sr.V[i][idx]
+        sr.t_end[i] = sr.t_end[i][idx]
+        sr.files[i] = sr.files[i][idx]
+    end
+    return sr
+end
