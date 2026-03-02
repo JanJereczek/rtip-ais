@@ -25,6 +25,10 @@ i1, i2, i3, i4 = [120, 168, 178, 230]
 j1, j2, j3, j4 = [225, 252, 272, 335]
 x1, x2, x3, x4 = x[i1], x[i2], x[i3], x[i4]
 y1, y2, y3, y4 = y[j1], y[j2], y[j3], y[j4]
+
+
+ii2, ii3 = [170, 195]
+xx2, xx3 = x[ii2], x[ii3]
 # ii1, ii2, ii3, ii4 = [findfirst(x_fi .>= x[i]) for i in (i1, i2, i3, i4)]
 # jj1, jj2, jj3, jj4 = [findfirst(y_fi .>= y[j]) for j in (j1, j2, j3, j4)]
 
@@ -147,6 +151,9 @@ for i in eachindex(hm_idx)
     # f_grnd_ref_glob = ncread(file, "f_grnd", start = [1, 1, 1], count = [-1, -1, 1])[:, :, 1]
     heatmap!(ax_hm[i], x, y, z_bed; cmaps["z_bed"]...)
     heatmap!(ax_hm[i], x, y, H_ice + z_bed; cmaps["z_srf"]...)
+    lines!(ax_hm[i], [xx2, xx3], [y23, y23], color = :red, linewidth = 4)
+    text!(ax_hm[i], xx2, y23, text = "A", color = :red, font = :bold)
+    text!(ax_hm[i], xx3, y23, text = "B", color = :red, font = :bold)
     xlims!(ax_hm[i], (x1, x4))
     ylims!(ax_hm[i], (y1, y4))
 

@@ -72,13 +72,16 @@ fig = Figure(size = (1600, 600), fontsize = 24)
 ax_ssp = Axis(fig[1, 1], aspect = AxisAspect(aratio))
 ax1 = Axis(fig[1, 1], aspect = AxisAspect(aratio))
 ax2 = Axis(fig[1, 2], aspect = DataAspect())
+ax3 = Axis(fig[1, 3], aspect = AxisAspect(aratio))
 ax4 = Axis(fig[1, 3], aspect = AxisAspect(aratio))
 rw = 0.4
 
+hidedecorations!(ax3)
 hidedecorations!(ax_ssp)
 ylims!(ax1, 0, 60)
 xlims!(ax1, 1, 11)
 xlims!(ax_ssp, 1, 11)
+vlines!(ax1, 8, color = :black, linestyle = :dash, label = "RCP8.5, 2300", linewidth = 3)
 
 ####################################
 # Ax1
@@ -161,7 +164,7 @@ ssphi_line_opts = (linestyle = :dash, linewidth = 3, alpha = 0.7)
 # end
 
 bifurcation_data = [
-    ("WAIS", 11, 38),
+    ("WAIS", 11, 40),
     ("Wilkes", 12, 20),
     ("Recovery", 15, 40),
     ("Aurora ext.", 18.5, 30),
@@ -256,7 +259,7 @@ f_rtip = [sr.f[i][i_rtip[i]] for i in eachindex(i_rtip)]
 
 # Based on the full WSB R-tip diagram, the isolated dots of tipping can be attributed to chaos + noise and should be ignored.
 for i in eachindex(f_rtip)
-    f_rtip[i][2] = max.(f_rtip[i][2], 5.75)
+    f_rtip[i][2] = max.(f_rtip[i][2], 5.755)
 end
 
 f_bif_cat = vcat(f_bif...)
@@ -288,7 +291,7 @@ ax4.xlabel = "R-tipping gap (K)"
 ax4.yaxisposition = :right
 yl = (-0.6, 0)
 # ylims!(ax4, yl)
-text!(ax4, 0.5, -0.065, text = "c", font = :bold, color = :gray10, fontsize = 30)
+text!(ax4, -0.5, -5, text = "c", font = :bold, color = :gray10, fontsize = 30)
 
 labels = vcat(visc_labels...)
 elements = [PolyElement(polycolor = viscmap[i]) for i in 1:5]
@@ -312,8 +315,11 @@ for ax in (ax1, ax4)
     ax.yminorgridvisible = false
 end
 xlims!(ax4, -0.6, 0)
+xlims!(ax3, -0.6, 0)
 ylims!(ax4, 0.5, 5.5)
 ax4.xticks = -0.5:0.1:0
+ax4.yreversed = true
+
 fig
 
 save(plotsdir("v2/rtip/rtip.png"), fig)
