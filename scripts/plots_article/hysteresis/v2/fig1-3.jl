@@ -3,10 +3,10 @@ include("../../../intro.jl")
 T = Float32
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xps = [
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/ocn"),
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/atm"),
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/dpr"),
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow"),
+    datadir("output/ais/v2/hyster/retreat/aqef/ocn"),
+    datadir("output/ais/v2/hyster/retreat/aqef/atm"),
+    datadir("output/ais/v2/hyster/retreat/aqef/dpr"),
+    datadir("output/ais/v2/hyster/retreat/aqef/refnomslow"),
 ]
 xp_labels = [
     "OCN",

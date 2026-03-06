@@ -78,7 +78,7 @@ end
 
 dir = datadir("output/ais/v2/hyster")
 xps = [
-    "$dir/retreat/aqef/minvisc/refnomslow",
+    "$dir/retreat/aqef/refnomslow",
     "$dir/regrowth/aqef/refnomslow",
     "$dir/regrowth/aqef/refnomslow-restarted",
 ]
@@ -122,11 +122,16 @@ w26_retreat_ramp, _ = readdlm(datadir("processed/winkelmann2026/retreat.csv"), '
 g20_retreat_equil = vcat([0, 55]', g20_retreat_equil)
 g20_regrowth_equil = vcat([-3 55.6; -2 55.6; -1 55.3; 0 55], g20_regrowth_equil)
 
-g20 = [g20_retreat_equil, g20_regrowth_equil]
-g20_labels = ["G20E", nothing]
-g20_colors = [xpcolors["G20E"], xpcolors["G20E"]]
-g20_plotstyle = [:scatterlines, :scatterlines]
-g20_markers = [:dtriangle, :utriangle]
+# g20 = [g20_retreat_equil, g20_regrowth_equil]
+# g20_labels = ["G20E", nothing]
+# g20_colors = [xpcolors["G20E"], xpcolors["G20E"]]
+# g20_plotstyle = [:scatterlines, :scatterlines]
+# g20_markers = [:dtriangle, :utriangle]
+g20 = [g20_retreat_ramp, g20_retreat_equil, g20_regrowth_ramp, g20_regrowth_equil]
+g20_labels = ["G20R", "G20E", nothing, nothing]
+g20_colors = [xpcolors["G20R"], xpcolors["G20E"], xpcolors["G20R"], xpcolors["G20E"]]
+g20_plotstyle = [:lines, :scatterlines, :lines, :scatterlines]
+g20_markers = [nothing, :dtriangle, nothing, :utriangle]
 
 for (i, ssp) in enumerate(ssp2100)
     vlines!(ax2, ssp, label = ssp_short_labels[i], color = xpcolors[ssp_labels[i]];
@@ -147,11 +152,11 @@ for i in eachindex(g20)
     end
 end
 
-plot_winkelmann2026 = true
-if plot_winkelmann2026
-    lines!(ax2, w26_retreat_ramp[:, 1] ./ polar_amplification, w26_retreat_ramp[:, 2], linewidth = 3,
-        label = "W26R", color = xpcolors["W26"])
-end
+# plot_winkelmann2026 = true
+# if plot_winkelmann2026
+#     lines!(ax2, w26_retreat_ramp[:, 1] ./ polar_amplification, w26_retreat_ramp[:, 2], linewidth = 3,
+#         label = "W26R", color = xpcolors["W26"])
+# end
 
 m3_msle = 1e9 * 1e6 / (3.625 * 1e14)
 # h94[1, 2] * m3_msle * gr_correction = 58
