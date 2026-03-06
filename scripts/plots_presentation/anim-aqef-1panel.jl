@@ -2,13 +2,13 @@ include("../intro.jl")
 
 function anim_aqef_1panel(xp_type, xp, k1, k2)
     if xp_type == "retreat"
-        dir = datadir("output/ais/v2/hyster/$xp_type/aqef/minvisc/$xp/0")
+        dir = datadir("output/ais/v2/hyster/$xp_type/aqef/$xp/0")
     elseif xp_type == "regrowth" && occursin("restarted", xp)
-        dir = datadir("output/ais/v2/hyster/$xp_type/aqef/minvisc/$xp/0")
-        @show dir
+        dir = datadir("output/ais/v2/hyster/$xp_type/aqef/$xp/0")
     else
         dir = datadir("output/ais/v2/hyster/$xp_type/aqef/$xp/0")
     end
+    @show dir
 
     file1D = "$dir/yelmo1D.nc"
     file2D = "$dir/yelmo2D.nc"
@@ -95,13 +95,15 @@ end
 data = [
     # ("retreat", "refnomslow", 1, 1100),
     # ("retreat", "dpr", 1, 800),
+    ("retreat", "elra", 1, nothing),
+    ("retreat", "elva", 1, 950),
     # ("retreat", "atm", 1, 1000),
     # ("retreat", "ocn", 1, nothing),
     # ("regrowth", "refnomslow", 100, nothing),
     # ("regrowth", "dpr", 100, nothing),
     # ("regrowth", "atm", 100, nothing),
     # ("regrowth", "upl", 100, nothing),
-    ("regrowth", "refnomslow-restarted", 1, nothing),
+    # ("regrowth", "refnomslow-restarted", 1, nothing),
 ]
 
 for xp_data in data

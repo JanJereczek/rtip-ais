@@ -1,10 +1,10 @@
-include("../../intro.jl")
+include("../../../intro.jl")
 
-fn_m2 = datadir("output/ais/ramps/16km/steps-sigmarange/0/fastisostasy.nc")
-fn_m1 = datadir("output/ais/ramps/16km/steps-sigmarange/1/fastisostasy.nc")
-fn_nom = datadir("output/ais/ramps/16km/steps-sigmarange/2/fastisostasy.nc")
-fn_p1 = datadir("output/ais/ramps/16km/steps-sigmarange/3/fastisostasy.nc")
-fn_p2 = datadir("output/ais/ramps/16km/steps-sigmarange/4/fastisostasy.nc")
+fn_m2 = datadir("output/ais/v2/hyster/retreat/aqef/refm2slow/0/fastisostasy.nc")
+fn_m1 = datadir("output/ais/v2/hyster/retreat/aqef/refm1slow/0/fastisostasy.nc")
+fn_nom = datadir("output/ais/v2/hyster/retreat/aqef/refnomslow/0/fastisostasy.nc")
+fn_p1 = datadir("output/ais/v2/hyster/retreat/aqef/refp1slow/0//fastisostasy.nc")
+fn_p2 = datadir("output/ais/v2/hyster/retreat/aqef/refp2slow/0//fastisostasy.nc")
 filenames = [fn_m2, fn_m1, fn_nom, fn_p1, fn_p2]
 
 T = Float32
@@ -13,7 +13,7 @@ yc = ncread(fn_nom, "yc")
 eta = [ncread(fn, "log10_eta_eff") for fn in filenames]
 Tlitho = ncread(fn_nom, "He_lith")
 
-file_yelmo = datadir("output/ais/ramps/16km/steps-sigmarange/2/yelmo2D.nc")
+file_yelmo = datadir("output/ais/v2/hyster/retreat/aqef/refnomslow/0/yelmo2D.nc")
 h_ice = ncslice(file_yelmo, "H_ice", 1)
 ice_mask = h_ice .> 0.5
 xc_yelmo = ncread(file_yelmo, "xc")
@@ -69,4 +69,4 @@ rowsize!(fig.layout, 1, 60)
 rowsize!(fig.layout, 0, 1)
 colsize!(fig.layout, 1, 500)
 colsize!(fig.layout, 2, 500)
-save(plotsdir("16km/solidearth.png"), fig)
+save(plotsdir("v2/rtip/solidearth.png"), fig)

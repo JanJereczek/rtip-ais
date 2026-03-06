@@ -1,7 +1,7 @@
 include("../../../intro.jl")
 
 T = Float32
-dir = datadir("output/ais/v2/hyster/retreat/aqef/minvisc")
+dir = datadir("output/ais/v2/hyster/retreat/aqef")
 xps = [
     "$dir/refm2slow",
     "$dir/refm1slow",
@@ -291,7 +291,7 @@ ax4.xlabel = "R-tipping gap (K)"
 ax4.yaxisposition = :right
 yl = (-0.6, 0)
 # ylims!(ax4, yl)
-text!(ax4, -0.5, -5, text = "c", font = :bold, color = :gray10, fontsize = 30)
+text!(ax4, -0.57, 1.15, text = "c", font = :bold, color = :gray10, fontsize = 30)
 
 labels = vcat(visc_labels...)
 elements = [PolyElement(polycolor = viscmap[i]) for i in 1:5]
