@@ -13,9 +13,7 @@ re = maximum(zc)
 sigma2D = fill(NaN, nx, ny)
 
 for i in 1:nx, j in 1:ny
-    @show sigma[i, j, :]
-    sigma[i, j] = mean(sigma[i, j, re-Te[i, j] .> zc .>= re-400f3])
-    sigma2D[i, j] = sigma[i, j]
+    sigma2D[i, j] = mean(sigma[i, j, re-Te[i, j] .> zc .>= re-400f3])
 end
 
 set_theme!(theme_latexfonts())
