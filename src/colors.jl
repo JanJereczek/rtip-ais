@@ -39,6 +39,8 @@ xpcolors = Dict(
     "SSP2-4.5" => :gray60,
     "SSP3-7.0" => :gray40,
     "SSP5-8.5" => :gray20,
+    "ELRA" => :mediumpurple1,
+    "ELVA" => :mediumpurple4,
 )
 
 cmaps = Dict(
