@@ -122,7 +122,7 @@ lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_grline, linewidth = lw2)
 # lines!(ax_cnt, t2D[grz_steps] ./ 1f3, cnt_calving, linewidth = lw2)
 
 ax_bmb.ylabel = L"Total BMB ($\mathrm{m \, yr^{-1}}$)"
-ax_mbmb.ylabel = L"Mean MB ($\mathrm{m \, yr^{-1}}$)"
+ax_mbmb.ylabel = L"Mean BMB ($\mathrm{m \, yr^{-1}}$)"
 ax_cnt.ylabel = "Cell count (1)"
 ax_bmb.xticklabelsvisible = false
 ax_mbmb.xticklabelsvisible = false

@@ -33,6 +33,17 @@ f_ref = aqef.f[end] ./ polar_amplification
 cropx, cropy = 20, 35
 aratio = (381 - 2*cropx) / (381 - 2*cropy)
 
+g20dir = datadir("processed/garbe2020")
+g20_regrowth_ramp, _ = readdlm("$g20dir/regrowth-ramp.csv", ',', header = true)
+g20_regrowth_equil, _ = readdlm("$g20dir/regrowth-equil.csv", ',', header = true)
+g20_regrowth_equil = vcat([-3 55.6; -2 55.6; -1 55.3; 0 55], g20_regrowth_equil)
+
+g20 = [g20_regrowth_ramp, g20_regrowth_equil]
+g20_labels = ["G20R", "G20E"]
+g20_colors = [xpcolors["G20R"], xpcolors["G20E"]]
+g20_plotstyle = [:lines, :scatterlines]
+g20_markers = [nothing, :utriangle]
+
 set_theme!(theme_latexfonts())
 ms1, ms2 = 8, 18
 fig4 = Figure(size=(800, 800), fontsize = 24)
@@ -70,6 +81,16 @@ bifs = [
 f_bif = [bifs[i][1] for i in eachindex(bifs)]
 vlines!(ax, f_bif, color = :gray60, alpha = 0.5, linewidth = 5)
 
+for i in eachindex(g20)
+    if g20_plotstyle[i] == :lines
+        lines!(ax, g20[i][:, 1] ./ polar_amplification, g20[i][:, 2], linewidth = 3,
+            label = g20_labels[i], color = g20_colors[i])
+    elseif g20_plotstyle[i] == :scatterlines
+        scatterlines!(ax, g20[i][:, 1] ./ polar_amplification, g20[i][:, 2],
+            linewidth = 3, label = g20_labels[i], color = g20_colors[i],
+            marker = g20_markers[i], markersize = ms2)
+    end
+end
 for i in eachindex(bifs)
     rectangle!(ax, (bifs[i][1] - 0.13, bifs[i][3] - 0.4), 0.3, 0.7*bifs[i][4])
     text!(ax, bifs[i][1] - 0.12, bifs[i][3], text = bifs[i][2], rotation = π/2, fontsize = 18)

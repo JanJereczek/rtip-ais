@@ -3,7 +3,7 @@ include("../../../intro.jl")
 T = Float32
 heatmap_frames = "aqef"    # "equil" or "aqef"
 xps = [
-    datadir("output/ais/v2/hyster/retreat/aqef/minvisc/refnomslow"),
+    datadir("output/ais/v2/hyster/retreat/aqef/refnomslow"),
 ]
 xp_labels = [
     "REF",
@@ -39,6 +39,17 @@ nx, ny = size(ncread(file2D, "x2D"))
 var_names_2D = ["z_bed", "z_srf", "uxy_s", "f_grnd", "f_ice"]
 z_bed, z_srf, uxy_srf, f_grnd, f_ice = load_netcdf_2D(file2D, var_names_2D, 1)
 
+
+g20dir = datadir("processed/garbe2020")
+g20_retreat_ramp, _ = readdlm("$g20dir/retreat-ramp.csv", ',', header = true)
+g20_retreat_equil, _ = readdlm("$g20dir/retreat-equil.csv", ',', header = true)
+g20_retreat_equil = vcat([0, 55]', g20_retreat_equil)
+g20 = [g20_retreat_ramp, g20_retreat_equil]
+g20_labels = ["G20R", "G20E"]
+g20_colors = [xpcolors["G20R"], xpcolors["G20E"]]
+g20_plotstyle = [:lines, :scatterlines]
+g20_markers = [nothing, :dtriangle]
+
 ###############################
 # Fig 1
 ###############################
@@ -46,6 +57,18 @@ alpha = 1
 set_theme!(theme_latexfonts())
 fig1 = Figure(size=(1600, 800), fontsize = 24)
 ax = Axis(fig1[1, 1])
+
+for i in eachindex(g20)
+    if g20_plotstyle[i] == :lines
+        lines!(ax, g20[i][:, 1] ./ polar_amplification, g20[i][:, 2], linewidth = 3,
+            label = g20_labels[i], color = g20_colors[i])
+    elseif g20_plotstyle[i] == :scatterlines
+        scatterlines!(ax, g20[i][:, 1] ./ polar_amplification, g20[i][:, 2],
+            linewidth = 3, label = g20_labels[i], color = g20_colors[i],
+            marker = g20_markers[i], markersize = ms2)
+    end
+end
+
 large_misi = [1.95, 5.87, 6.95, 8.65]
 small_misi = [4.2, 6.21, 7.2, 7.6, 7.9, 9.2]
 perimeter = [9.7, 10.05]
