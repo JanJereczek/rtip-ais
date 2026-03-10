@@ -14,6 +14,10 @@ j23 = (j2+j3) ÷ 2
 y23 = y[j23]
 dx2 = 5
 lk = [5, 5, 1]
+xx = round.(x[i2:i3] .- x[i2])
+xx1 = xx[1]
+xx2 = xx[end]
+
 # J23 = (j2+j3) ÷ 2
 # Y23 = y[J23]
 # for i in -10:10
@@ -57,15 +61,15 @@ lk = [5, 5, 1]
         # text!(axs_hm[i], x1 + 50, y4 - 320, text = "t = $(Int(round(time2D / 1e3, digits=1))) kyr", color = :white)
 
         z_bed_0_vec = ncread(file_ref, "z_bed", start = [i2, j23, 1], count = [i3-i2+1, 1, 1])[:, 1, 1]
-        band!(axs_tr[i], x[i2:i3], z_bed_vec, bslvec, color = :royalblue)
-        band!(axs_tr[i], x[i2:i3], z_bed_vec, z_srf_vec, color = :gray90)
+        band!(axs_tr[i], xx, z_bed_vec, bslvec, color = :royalblue)
+        band!(axs_tr[i], xx, z_bed_vec, z_srf_vec, color = :gray90)
         # lines!(axs_tr[i], x[i2:i3], z_srf_vec, color = :gray80, linewidth = 4, label = "ice surface")
 
-        band!(axs_tr[i], x[i2:i3], min.(z_bed_vec, -1000), z_bed_vec, color = :tan1)
-        lines!(axs_tr[i], x[i2:i3], z_bed_vec, color = :saddlebrown, linewidth = 4, label = "bedrock")
-        lines!(axs_tr[i], x[i2:i3], z_bed_0_vec, color = :saddlebrown, linewidth = 4, linestyle = :dash, label = "initial bed")
+        band!(axs_tr[i], xx, min.(z_bed_vec, -1000), z_bed_vec, color = :tan1)
+        lines!(axs_tr[i], xx, z_bed_vec, color = :saddlebrown, linewidth = 4, label = L"bed at t = $22 \, \mathrm{kyr}$")
+        lines!(axs_tr[i], xx, z_bed_0_vec, color = :saddlebrown, linewidth = 4, linestyle = :dash, label = "initial bed")
         hlines!(axs_tr[i], bsl_snapshot, color = :midnightblue, linewidth = 4, linestyle = :dash, label = "sea level")
-        xlims!(axs_tr[i], (x2, x3))
+        xlims!(axs_tr[i], (xx1, xx2))
         ylims!(axs_tr[i], (-800, 800))
         axs_tr[i].yaxisposition = :right
         axs_tr[i].yticks = -600:200:800
@@ -75,11 +79,11 @@ lk = [5, 5, 1]
         if i < nrows
             axs_tr[i].xticklabelsvisible = false
         else
-            axs_tr[i].xlabel = L"$x$ (km)"
+            axs_tr[i].xlabel = L"Distance along transect, $x$ (km)"
         end
 
         hidedecorations!(axs_t[i])
-        xlims!(axs_t[i], (x2, x3))
+        xlims!(axs_t[i], (xx1, xx2))
         ylims!(axs_t[i], (-800, 800))
         grays = [:gray80, :gray65, :gray50, :gray35, :gray20]
         for dk in 0:4
@@ -88,13 +92,13 @@ lk = [5, 5, 1]
             z_srf_vec = z_bed_vec .+ H_ice_vec
             l = findfirst(H_ice_vec .> 0)
             z_srf_vec[1:l-2] .= NaN
-            lines!(axs_t[i], x[i2:i3], z_srf_vec, color = grays[dk+1], linewidth = 4, label = "t = $(Int(round((time2D + lk[i]*dk*1e3) / 1e3, digits=1))) kyr")
+            lines!(axs_t[i], xx, z_srf_vec, color = grays[dk+1], linewidth = 4, label = "t = $(Int(round((time2D + lk[i]*dk*1e3) / 1e3, digits=1))) kyr")
         end
         axislegend(axs_t[i], "Ice surface", position = :lt, labelsize = 24, titlesize = 24)
 
         # text!(axs_tr[i], x2 + dx2, 200, text = "t = $(Int(round(time2D / 1e3, digits=1))) kyr", color = :black)
-        text!(axs_tr[i], x2 + dx2, -800, text = "A", color = :red, font = :bold)
-        text!(axs_tr[i], x3 - 15, -800, text = "B", color = :red, font = :bold)
+        text!(axs_tr[i], xx1 + dx2, -800, text = "A", color = :red, font = :bold)
+        text!(axs_tr[i], xx2 - 15, -800, text = "B", color = :red, font = :bold)
     end
     # Colorbar(fig_tra[1, 1], label = "Bed elevation (km)", vertical = false, width = Relative(rw), height = Relative(rh), ticks = (-4000:1000:3000, string.(-4:3)); cmaps["z_bed"]...)
     # Colorbar(fig_tra[1, 2], label = "Ice surface elevation (km)", vertical = false, width = Relative(rw), height = Relative(rh), ticks = (-4000:1000:3000, string.(-4:3)); cmaps["z_srf"]...)
@@ -103,9 +107,9 @@ lk = [5, 5, 1]
     # text!(axs_hm[1], x1 + 50, y4 - 200, text = L"(a) $-2 \, \sigma$", color = :white, font = :bold)
     # text!(axs_hm[2], x1 + 50, y4 - 200, text = L"(c) $0 \, \sigma$", color = :white, font = :bold)
     # text!(axs_hm[3], x1 + 50, y4 - 200, text = L"(e) $+2 \, \sigma$", color = :white, font = :bold)
-    text!(axs_tr[1], x2 + dx2, -200, text = L"a $-2 \, \sigma$", color = :white, font = :bold)
-    text!(axs_tr[2], x2 + dx2, -200, text = L"b $0 \, \sigma$", color = :white, font = :bold)
-    text!(axs_tr[3], x2 + dx2, -200, text = L"c $+2 \, \sigma$", color = :white, font = :bold)
+    text!(axs_tr[1], xx1 + dx2, -200, text = L"a $-2 \, \sigma$", color = :white, font = :bold)
+    text!(axs_tr[2], xx1 + dx2, -200, text = L"b $0 \, \sigma$", color = :white, font = :bold)
+    text!(axs_tr[3], xx1 + dx2, -200, text = L"c $+2 \, \sigma$", color = :white, font = :bold)
 
     colsize!(fig_tra.layout, 1, 1350)
     rowsize!(fig_tra.layout, 1, 60)
